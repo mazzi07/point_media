@@ -1,0 +1,24 @@
+# Controle de Versão e Dependências
+.git
+node_modules
+npm-debug.log*
+
+# Build e Logs
+dist
+dist-ssr
+backend/target
+*.log
+
+# Variáveis de Ambiente
+.env
+.env.*
+
+# IDEs e Ferramentas
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
