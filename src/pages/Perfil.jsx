@@ -12,10 +12,12 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useQuery } from '@tanstack/react-query';
+import html2pdf from 'html2pdf.js';
 
 export default function Perfil() {
   const { isLoggedIn, user } = useAuth();
   const navigate = useNavigate();
+  const [isGeneratingPdf, setIsGeneratingPdf] = React.useState(false);
 
   const bgCard = useColorModeValue('white', 'brand.cardBg');
   const border = useColorModeValue('gray.200', 'whiteAlpha.100');
@@ -75,6 +77,25 @@ export default function Perfil() {
 
   const badgesEarned = badges.filter(b => b.ganhouBadge);
 
+  const handleDownloadPDF = () => {
+    setIsGeneratingPdf(true);
+    // Allow state to flush so buttons are hidden before capture
+    setTimeout(() => {
+      const element = document.getElementById('resume-pdf-content');
+      const opt = {
+        margin:       [10, 10, 10, 10],
+        filename:     `curriculo_${user?.nome.replace(/\s+/g, '_').toLowerCase()}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      html2pdf().set(opt).from(element).save().then(() => {
+        setIsGeneratingPdf(false);
+      });
+    }, 100);
+  };
+
   return (
     <Box pt={16} pb={20} position="relative" overflow="hidden">
       {/* Background blobs */}
@@ -82,7 +103,7 @@ export default function Perfil() {
         bgGradient="radial(circle, rgba(59,130,246,0.08) 0%, transparent 60%)"
         filter="blur(80px)" zIndex={-1} />
 
-      <Container maxW="4xl">
+      <Container maxW="4xl" id="resume-pdf-content" bg={useColorModeValue('gray.50', 'gray.900')} p={isGeneratingPdf ? 8 : 0}>
         {/* Profile Header */}
         <Box bg={bgCard} border="1px solid" borderColor={border} boxShadow={cardShadow}
           borderRadius="2xl" p={8} mb={8} position="relative" overflow="hidden">
@@ -122,9 +143,16 @@ export default function Perfil() {
                     GitHub
                   </Button>
                 )}
-                <Button size="sm" leftIcon={<FaEdit />} variant="gradient" onClick={() => navigate('/criar-perfil')}>
-                  Editar Perfil
-                </Button>
+                {!isGeneratingPdf && (
+                  <>
+                    <Button size="sm" onClick={handleDownloadPDF} isLoading={isGeneratingPdf} variant="outline" colorScheme="blue">
+                      Baixar PDF
+                    </Button>
+                    <Button size="sm" leftIcon={<FaEdit />} variant="gradient" onClick={() => navigate('/criar-perfil')}>
+                      Editar Perfil
+                    </Button>
+                  </>
+                )}
               </HStack>
             </Box>
           </Flex>
@@ -149,10 +177,12 @@ export default function Perfil() {
                 <Text fontSize="sm" color={labelColor} fontStyle="italic">
                   Nenhuma experiência cadastrada ainda.
                 </Text>
-                <Button size="sm" variant="outline" borderColor={border} color={textColor}
-                  onClick={() => navigate('/criar-perfil')}>
-                  Adicionar Experiência
-                </Button>
+                {!isGeneratingPdf && (
+                  <Button size="sm" variant="outline" borderColor={border} color={textColor}
+                    onClick={() => navigate('/criar-perfil')}>
+                    Adicionar Experiência
+                  </Button>
+                )}
               </VStack>
             )}
           </Box>
@@ -180,10 +210,12 @@ export default function Perfil() {
                 <Text fontSize="sm" color={labelColor} fontStyle="italic">
                   Nenhuma habilidade adicionada.
                 </Text>
-                <Button size="sm" variant="outline" borderColor={border} color={textColor}
-                  onClick={() => navigate('/criar-perfil')}>
-                  Adicionar Habilidades
-                </Button>
+                {!isGeneratingPdf && (
+                  <Button size="sm" variant="outline" borderColor={border} color={textColor}
+                    onClick={() => navigate('/criar-perfil')}>
+                    Adicionar Habilidades
+                  </Button>
+                )}
               </VStack>
             )}
           </Box>
@@ -221,9 +253,11 @@ export default function Perfil() {
               <Text fontSize="sm" color={labelColor} fontStyle="italic">
                 Nenhum selo conquistado. Faça quizzes para validar suas habilidades!
               </Text>
-              <Button size="sm" variant="gradient" onClick={() => navigate('/quizzes')}>
-                Fazer Quizzes
-              </Button>
+              {!isGeneratingPdf && (
+                <Button size="sm" variant="gradient" onClick={() => navigate('/quizzes')}>
+                  Fazer Quizzes
+                </Button>
+              )}
             </VStack>
           )}
         </Box>
@@ -263,10 +297,12 @@ export default function Perfil() {
               <Text fontSize="sm" color={labelColor} fontStyle="italic">
                 Nenhuma candidatura realizada.
               </Text>
-              <Button size="sm" variant="outline" borderColor={border} color={textColor}
-                onClick={() => navigate('/vagas')}>
-                Ver Vagas
-              </Button>
+              {!isGeneratingPdf && (
+                <Button size="sm" variant="outline" borderColor={border} color={textColor}
+                  onClick={() => navigate('/vagas')}>
+                  Ver Vagas
+                </Button>
+              )}
             </VStack>
           )}
         </Box>
