@@ -106,9 +106,15 @@ export default function Quizzes() {
                       {quiz.descricao}
                     </Text>
                     <Flex gap={3}>
-                      <Button flex="1" variant="gradient" onClick={() => handleStartQuiz(quiz.id)}>
-                        Iniciar Quiz
-                      </Button>
+                      {quiz.isRespondido ? (
+                        <Button flex="1" variant="ghost" colorScheme="green" leftIcon={<FaMedal />} isDisabled>
+                          Concluído
+                        </Button>
+                      ) : (
+                        <Button flex="1" variant="gradient" onClick={() => handleStartQuiz(quiz.id)}>
+                          Iniciar Quiz
+                        </Button>
+                      )}
                     </Flex>
                   </Box>
                 ))}

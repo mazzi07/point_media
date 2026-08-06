@@ -251,7 +251,10 @@ export default function Navbar() {
                 <MenuList fontSize="sm" bg={cardBg} borderColor={borderColor}>
                   <MenuItem bg={cardBg} _hover={{ bg: hoverBg }} onClick={() => fileInputRef.current.click()}>Alterar Foto de Perfil</MenuItem>
                   {user?.tipo !== 'ADMIN' && (
-                    <MenuItem bg={cardBg} _hover={{ bg: hoverBg }} onClick={() => navigate('/criar-perfil')}>Meu Currículo</MenuItem>
+                    <>
+                      <MenuItem bg={cardBg} _hover={{ bg: hoverBg }} onClick={() => navigate('/perfil')}>Meu Perfil</MenuItem>
+                      <MenuItem bg={cardBg} _hover={{ bg: hoverBg }} onClick={() => navigate('/criar-perfil')}>Meu Currículo</MenuItem>
+                    </>
                   )}
                   {user?.tipo === 'ADMIN' && (
                     <MenuItem bg={cardBg} _hover={{ bg: hoverBg }} onClick={() => navigate('/admin')}>Painel Admin</MenuItem>

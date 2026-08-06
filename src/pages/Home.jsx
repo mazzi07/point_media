@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import {
   Box, Heading, Text, SimpleGrid, Button, useColorModeValue,
-  Container, VStack, HStack, Icon, Flex, Avatar, Tag, Grid, CircularProgress, CircularProgressLabel
+  Container, VStack, HStack, Icon, Flex, Avatar, Tag, Grid, CircularProgress, CircularProgressLabel, Badge
 } from '@chakra-ui/react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Navigate } from 'react-router-dom';
@@ -47,6 +47,16 @@ export default function Home() {
     queryKey: ['quizzes-disponiveis'],
     queryFn: async () => {
       const res = await api.get('/api/quizzes');
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: isLoggedIn && user?.tipo !== 'ADMIN',
+  });
+
+  const { data: candidaturas = [], isLoading: isLoadingCandidaturas } = useQuery({
+    queryKey: ['minhas-candidaturas'],
+    queryFn: async () => {
+      const res = await api.get('/api/vagas/minhas-candidaturas');
       if (!res.ok) return [];
       return res.json();
     },
@@ -121,6 +131,34 @@ export default function Home() {
             </Button>
           </Box>
         </SimpleGrid>
+
+        <Box mb={12}>
+          <Heading size="md" mb={6} color={headingColor}>Minhas Candidaturas</Heading>
+          {isLoadingCandidaturas ? (
+            <CircularProgress isIndeterminate color="brand.blue" size="30px" />
+          ) : candidaturas.length > 0 ? (
+            <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+              {candidaturas.map((cand) => (
+                <Box key={cand.id} bg={bgCard} border="1px solid" borderColor={border} boxShadow={cardShadow} rounded="2xl" p={6}
+                     transition="all 0.3s" _hover={{ borderColor: hoverBorder, boxShadow: hoverShadow }}>
+                  <Badge colorScheme="green" mb={3}>Inscrito</Badge>
+                  <Heading size="sm" color={headingColor} mb={2}>{cand.vaga.titulo}</Heading>
+                  <Text fontSize="xs" color={textColor} mb={4}>Área: {cand.vaga.area}</Text>
+                  <Text fontSize="xs" color={textColor}>
+                    Em: {new Date(cand.dataCandidatura).toLocaleDateString()}
+                  </Text>
+                </Box>
+              ))}
+            </SimpleGrid>
+          ) : (
+            <Box bg={bgCard} border="1px solid" borderColor={border} rounded="xl" p={6} textAlign="center">
+              <Text fontSize="sm" color={textColor}>Você ainda não se inscreveu em nenhuma vaga.</Text>
+              <Button mt={4} size="sm" variant="outline" borderColor={border} color={textColor} onClick={() => navigate('/vagas')}>
+                Ver Vagas Disponíveis
+              </Button>
+            </Box>
+          )}
+        </Box>
 
 
         <Box>

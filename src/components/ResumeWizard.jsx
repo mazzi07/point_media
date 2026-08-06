@@ -13,10 +13,11 @@ import { useNavigate } from 'react-router-dom';
 import StepBasicInfo from './wizard/StepBasicInfo';
 import StepExperience from './wizard/StepExperience';
 import StepSkills from './wizard/StepSkills';
+import StepReview from './wizard/StepReview';
 
 export default function ResumeWizard() {
   const [currentStep, setCurrentStep] = useState(0);
-  const steps = ['Dados Básicos', 'Experiência', 'Habilidades'];
+  const steps = ['Dados Básicos', 'Experiência', 'Habilidades', 'Revisão'];
 
   const toast = useToast();
   const { user, setHasResume } = useAuth();
@@ -172,6 +173,8 @@ export default function ResumeWizard() {
         return <StepExperience curriculo={curriculo} handleChange={handleChange} />;
       case 2:
         return <StepSkills habilidades={habilidades} skillInput={skillInput} setSkillInput={setSkillInput} addSkill={addSkill} removeSkill={removeSkill} />;
+      case 3:
+        return <StepReview user={user} curriculo={curriculo} habilidades={habilidades} />;
       default:
         return null;
     }

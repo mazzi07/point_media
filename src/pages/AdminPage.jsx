@@ -350,6 +350,18 @@ export default function AdminPage() {
                           ))}
                         </HStack>
                       )}
+                      {c.vagasCandidatadas && c.vagasCandidatadas.length > 0 && (
+                        <Box mt={3}>
+                          <Text fontSize="10px" fontWeight="700" textTransform="uppercase" color={mutedColor} mb={1}>Candidaturas ({c.vagasCandidatadas.length})</Text>
+                          <HStack spacing={2} flexWrap="wrap">
+                            {c.vagasCandidatadas.map((vaga) => (
+                              <Tag key={vaga.id} size="sm" rounded="md" colorScheme="green" variant="subtle" fontSize="10px" px={2}>
+                                {vaga.titulo}
+                              </Tag>
+                            ))}
+                          </HStack>
+                        </Box>
+                      )}
                       <HStack spacing={3} mt={2}>
                         {c.linkedin && (
                           <Text as="a" href={c.linkedin} target="_blank" fontSize="xs"

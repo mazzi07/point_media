@@ -14,6 +14,7 @@ import CriarPerfil from './pages/CriarPerfil'
 import AdminPage from './pages/AdminPage'
 import Quizzes from './pages/Quizzes'
 import QuizTest from './pages/QuizTest'
+import Perfil from './pages/Perfil'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import AuthModal from './components/AuthModal'
 
@@ -49,6 +50,9 @@ function App() {
               <Route path="/quizzes/:id" element={<QuizTest />} />
               <Route path="/criar-perfil" element={
                 <PrivateRoute><CriarPerfil /></PrivateRoute>
+              } />
+              <Route path="/perfil" element={
+                <PrivateRoute><Perfil /></PrivateRoute>
               } />
               <Route path="/admin" element={
                 <AdminRoute><AdminPage /></AdminRoute>

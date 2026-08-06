@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import {
   Modal, ModalOverlay, ModalContent, ModalBody, ModalCloseButton,
   Box, Flex, VStack, Heading, Text, Input, Button, Link,
-  InputGroup, InputLeftElement, Icon, Checkbox, HStack,
-  useToast, Divider, FormControl, FormErrorMessage, Image
+  InputGroup, InputLeftElement, InputRightElement, Icon, Checkbox, HStack,
+  useToast, Divider, FormControl, FormErrorMessage, Image,
+  IconButton
 } from '@chakra-ui/react';
 import pointLogo from '../assets/point.png';
-import { FaEnvelope, FaLock, FaUser, FaBriefcase, FaStar, FaMagic, FaCheckCircle, FaChartLine } from 'react-icons/fa';
+import { FaEnvelope, FaLock, FaUser, FaBriefcase, FaStar, FaMagic, FaCheckCircle, FaChartLine, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import { useNavigate } from 'react-router-dom';
@@ -37,6 +38,8 @@ const registerSchema = z.object({
 export default function AuthModal() {
   const { isAuthModalOpen, closeAuthModal, authModalMode, setAuthModalMode, login } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const toast = useToast();
   const navigate = useNavigate();
 
@@ -243,7 +246,18 @@ export default function AuthModal() {
                   <Text fontSize="sm" fontWeight="500" color="white" mb={1}>Senha</Text>
                   <InputGroup size="lg">
                     <InputLeftElement pointerEvents="none"><Icon as={FaLock} color="gray.500" fontSize="sm" /></InputLeftElement>
-                    <Input type="password" placeholder="••••••••" bg="rgba(255,255,255,0.02)" border="1px solid" borderColor="whiteAlpha.200" color="white" fontSize="sm" focusBorderColor="brand.pink" {...(isLogin ? registerLogin('senha') : registerSignup('senha'))} />
+                    <Input type={showPassword ? 'text' : 'password'} placeholder="••••••••" bg="rgba(255,255,255,0.02)" border="1px solid" borderColor="whiteAlpha.200" color="white" fontSize="sm" focusBorderColor="brand.pink" pr="3rem" {...(isLogin ? registerLogin('senha') : registerSignup('senha'))} />
+                    <InputRightElement>
+                      <IconButton
+                        variant="ghost"
+                        size="sm"
+                        icon={<Icon as={showPassword ? FaEyeSlash : FaEye} />}
+                        color="gray.500"
+                        _hover={{ color: 'white' }}
+                        onClick={() => setShowPassword(!showPassword)}
+                        aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                      />
+                    </InputRightElement>
                   </InputGroup>
                   <FormErrorMessage fontSize="xs">{isLogin ? errorsLogin.senha?.message : errorsSignup.senha?.message}</FormErrorMessage>
                 </FormControl>
@@ -253,7 +267,18 @@ export default function AuthModal() {
                     <Text fontSize="sm" fontWeight="500" color="white" mb={1}>Confirmar senha</Text>
                     <InputGroup size="lg">
                       <InputLeftElement pointerEvents="none"><Icon as={FaLock} color="gray.500" fontSize="sm" /></InputLeftElement>
-                      <Input type="password" placeholder="••••••••" bg="rgba(255,255,255,0.02)" border="1px solid" borderColor="whiteAlpha.200" color="white" fontSize="sm" focusBorderColor="brand.pink" {...registerSignup('confirmarSenha')} />
+                      <Input type={showConfirmPassword ? 'text' : 'password'} placeholder="••••••••" bg="rgba(255,255,255,0.02)" border="1px solid" borderColor="whiteAlpha.200" color="white" fontSize="sm" focusBorderColor="brand.pink" pr="3rem" {...registerSignup('confirmarSenha')} />
+                      <InputRightElement>
+                        <IconButton
+                          variant="ghost"
+                          size="sm"
+                          icon={<Icon as={showConfirmPassword ? FaEyeSlash : FaEye} />}
+                          color="gray.500"
+                          _hover={{ color: 'white' }}
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          aria-label={showConfirmPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                        />
+                      </InputRightElement>
                     </InputGroup>
                     <FormErrorMessage fontSize="xs">{errorsSignup.confirmarSenha?.message}</FormErrorMessage>
                   </FormControl>

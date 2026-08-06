@@ -1,6 +1,7 @@
 package com.pointmedia.auth.controller;
 
 import com.pointmedia.auth.model.Curriculo;
+import com.pointmedia.auth.repository.CandidaturaRepository;
 import com.pointmedia.auth.repository.CurriculoRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,9 +19,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class CandidatoController {
 
     private final CurriculoRepository curriculoRepository;
+    private final CandidaturaRepository candidaturaRepository;
 
-    public CandidatoController(CurriculoRepository curriculoRepository) {
+    public CandidatoController(CurriculoRepository curriculoRepository, CandidaturaRepository candidaturaRepository) {
         this.curriculoRepository = curriculoRepository;
+        this.candidaturaRepository = candidaturaRepository;
     }
 
     @GetMapping("/candidatos")
@@ -45,6 +48,18 @@ public class CandidatoController {
                 m.put("habilidades", new java.util.ArrayList<>(c.getHabilidades()));
                 m.put("linkedin", c.getLinkedin());
                 m.put("github", c.getGithub());
+                
+                List<Map<String, Object>> vagasCandidatadas = candidaturaRepository.findByUsuario(c.getUsuario())
+                    .stream()
+                    .map(cand -> {
+                        Map<String, Object> vMap = new HashMap<>();
+                        vMap.put("id", cand.getVaga().getId());
+                        vMap.put("titulo", cand.getVaga().getTitulo());
+                        return vMap;
+                    })
+                    .collect(Collectors.toList());
+                m.put("vagasCandidatadas", vagasCandidatadas);
+
                 return m;
             })
             .collect(Collectors.toList());

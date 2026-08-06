@@ -39,6 +39,7 @@ public class QuizController {
 
     @GetMapping
     public ResponseEntity<?> listarQuizzes() {
+        Optional<Usuario> usuarioOpt = getAuthenticatedUser();
         List<Quiz> quizzes = quizRepository.findAll();
         // retorna sem as alternativas completas pra nao pesar
         List<Map<String, Object>> res = quizzes.stream().map(q -> {
@@ -50,6 +51,13 @@ public class QuizController {
             map.put("nivel", q.getNivel());
             map.put("tempoMinutos", q.getTempoMinutos());
             map.put("totalPerguntas", q.getPerguntas().size());
+            
+            boolean isRespondido = false;
+            if (usuarioOpt.isPresent()) {
+                isRespondido = resultadoQuizRepository.findByUsuarioAndQuiz(usuarioOpt.get(), q).isPresent();
+            }
+            map.put("isRespondido", isRespondido);
+            
             return map;
         }).collect(Collectors.toList());
         return ResponseEntity.ok(res);
@@ -57,6 +65,7 @@ public class QuizController {
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getQuizCompleto(@PathVariable Long id) {
+        Optional<Usuario> usuarioOpt = getAuthenticatedUser();
         Optional<Quiz> quizOpt = quizRepository.findById(id);
         if (quizOpt.isEmpty()) return ResponseEntity.notFound().build();
         Quiz quiz = quizOpt.get();
@@ -73,6 +82,13 @@ public class QuizController {
         quizMap.put("categoria", quiz.getCategoria());
         quizMap.put("nivel", quiz.getNivel());
         quizMap.put("tempoMinutos", quiz.getTempoMinutos());
+        
+        boolean isRespondido = false;
+        if (usuarioOpt.isPresent()) {
+            isRespondido = resultadoQuizRepository.findByUsuarioAndQuiz(usuarioOpt.get(), quiz).isPresent();
+        }
+        quizMap.put("isRespondido", isRespondido);
+
         quizMap.put("perguntas", quiz.getPerguntas().stream().map(p -> {
             Map<String, Object> pMap = new HashMap<>();
             pMap.put("id", p.getId());

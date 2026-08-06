@@ -31,6 +31,11 @@ export default function QuizTest() {
         return res.json();
       })
       .then(data => {
+        if (data.isRespondido) {
+          toast({ title: 'Quiz já realizado.', description: 'Você não pode refazer este teste.', status: 'warning' });
+          navigate('/quizzes');
+          return;
+        }
         setQuiz(data);
         setTimeLeft(data.tempoMinutos * 60);
         setLoading(false);

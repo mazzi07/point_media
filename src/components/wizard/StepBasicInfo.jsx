@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { VStack, Heading, Box, Text, Input, useColorModeValue, Image, useToast, Spinner, Flex } from '@chakra-ui/react';
+import { VStack, Heading, Box, Text, Input, useColorModeValue, Image, useToast, Spinner, Flex, Icon } from '@chakra-ui/react';
+import { FaCloudUploadAlt } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
 
@@ -7,12 +8,15 @@ export default function StepBasicInfo({ user, curriculo, handleChange }) {
   const { updateUserField } = useAuth();
   const toast = useToast();
   const [uploading, setUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
+  const processFile = (file) => {
     if (!file) return;
-
-    if (file.size > 1024 * 1024) { // 1MB limite
+    if (!file.type.startsWith('image/')) {
+      toast({ title: 'Apenas imagens são aceitas.', status: 'warning', duration: 3000, position: 'top' });
+      return;
+    }
+    if (file.size > 1024 * 1024) {
       toast({ title: 'A imagem deve ter no máximo 1MB.', status: 'warning', duration: 3000, position: 'top' });
       return;
     }
@@ -39,6 +43,31 @@ export default function StepBasicInfo({ user, curriculo, handleChange }) {
     };
     reader.readAsDataURL(file);
   };
+
+  const handleFileChange = (e) => {
+    processFile(e.target.files[0]);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    const file = e.dataTransfer?.files?.[0];
+    processFile(file);
+  };
+
   return (
     <VStack spacing={5} align="stretch">
       <Heading size="sm" color={useColorModeValue('gray.800', 'white')}>Dados Básicos</Heading>
@@ -51,19 +80,29 @@ export default function StepBasicInfo({ user, curriculo, handleChange }) {
         </Text>
       </Box>
 
-      <Box border="1px dashed" borderColor={useColorModeValue('gray.300', 'gray.600')}
+      <Box border="2px dashed" borderColor={isDragging ? 'brand.pink' : useColorModeValue('gray.300', 'gray.600')}
+        bg={isDragging ? 'rgba(213, 24, 123, 0.05)' : 'transparent'}
         p={5} rounded="md" textAlign="center" position="relative" overflow="hidden"
-        _hover={{ borderColor: 'brand.blue' }} transition="border-color 0.2s">
+        _hover={{ borderColor: 'brand.blue' }} transition="all 0.2s"
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}>
         
         {uploading ? (
           <Spinner size="md" color="brand.blue" />
+        ) : isDragging ? (
+          <Flex direction="column" align="center" justify="center" py={2}>
+            <Icon as={FaCloudUploadAlt} w={8} h={8} color="brand.pink" mb={2} />
+            <Text fontSize="sm" fontWeight="600" color="brand.pink">Solte a imagem aqui</Text>
+          </Flex>
         ) : user?.avatar ? (
           <Flex direction="column" align="center" justify="center">
             <Image src={user.avatar} boxSize="80px" borderRadius="full" objectFit="cover" mb={2} />
-            <Text fontSize="xs" color="brand.blue">Clique para alterar a foto</Text>
+            <Text fontSize="xs" color="brand.blue">Clique ou arraste para alterar a foto</Text>
           </Flex>
         ) : (
           <Box>
+            <Icon as={FaCloudUploadAlt} w={6} h={6} color={useColorModeValue('gray.400', 'gray.500')} mb={2} />
             <Text fontSize="sm" fontWeight="500" color={useColorModeValue('gray.600', 'gray.300')} mb={1}>
               Foto de Perfil
             </Text>
