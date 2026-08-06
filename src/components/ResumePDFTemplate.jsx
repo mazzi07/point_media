@@ -58,10 +58,14 @@ export default function ResumePDFTemplate({ user, curriculo, habilidades }) {
       backgroundColor: '#ebf8ff',
       color: '#3182ce',
       border: '1px solid #3182ce',
-      padding: '4px 10px',
-      borderRadius: '15px',
+      padding: '6px 12px',
+      borderRadius: '20px',
       fontSize: '12px',
-      fontWeight: 'bold'
+      fontWeight: 'bold',
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      lineHeight: '1'
     }
   };
 
