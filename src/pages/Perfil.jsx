@@ -9,6 +9,7 @@ import {
   FaCode, FaClock, FaStar
 } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useQuery } from '@tanstack/react-query';
 import html2pdf from 'html2pdf.js';

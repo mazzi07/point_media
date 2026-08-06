@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   VStack, Heading, Box, Text, HStack, Tag, TagLabel, Divider, Icon,
-  Avatar, Flex, useColorModeValue
+  Avatar, Flex, useColorModeValue, Button
 } from '@chakra-ui/react';
 import { FaLinkedin, FaGithub, FaBriefcase, FaCode, FaCheckCircle, FaDownload } from 'react-icons/fa';
 
