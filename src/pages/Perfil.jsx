@@ -245,8 +245,8 @@ export default function Perfil() {
                 <Flex key={cand.id} bg={sectionBg} p={4} borderRadius="lg" border="1px solid"
                   borderColor={border} justify="space-between" align="center" flexWrap="wrap" gap={2}>
                   <Box>
-                    <Text fontWeight="600" fontSize="sm" color={headingColor}>{cand.vaga?.titulo || 'Vaga'}</Text>
-                    <Text fontSize="xs" color={textColor}>{cand.vaga?.area}</Text>
+                    <Text fontWeight="600" fontSize="sm" color={headingColor}>{cand.titulo || 'Vaga'}</Text>
+                    <Text fontSize="xs" color={textColor}>{cand.area}</Text>
                   </Box>
                   <HStack spacing={3}>
                     <Badge colorScheme="green">Inscrito</Badge>

@@ -85,6 +85,7 @@ public class VagaController {
                 Map<String, Object> map = new HashMap<>();
                 map.put("vagaId", c.getVaga().getId());
                 map.put("titulo", c.getVaga().getTitulo());
+                map.put("area", c.getVaga().getArea());
                 map.put("dataCandidatura", c.getDataCandidatura());
                 return map;
             })

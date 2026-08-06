@@ -142,8 +142,8 @@ export default function Home() {
                 <Box key={cand.id} bg={bgCard} border="1px solid" borderColor={border} boxShadow={cardShadow} rounded="2xl" p={6}
                      transition="all 0.3s" _hover={{ borderColor: hoverBorder, boxShadow: hoverShadow }}>
                   <Badge colorScheme="green" mb={3}>Inscrito</Badge>
-                  <Heading size="sm" color={headingColor} mb={2}>{cand.vaga.titulo}</Heading>
-                  <Text fontSize="xs" color={textColor} mb={4}>Área: {cand.vaga.area}</Text>
+                  <Heading size="sm" color={headingColor} mb={2}>{cand.titulo}</Heading>
+                  <Text fontSize="xs" color={textColor} mb={4}>Área: {cand.area}</Text>
                   <Text fontSize="xs" color={textColor}>
                     Em: {new Date(cand.dataCandidatura).toLocaleDateString()}
                   </Text>
