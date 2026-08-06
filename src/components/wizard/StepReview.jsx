@@ -3,9 +3,9 @@ import {
   VStack, Heading, Box, Text, HStack, Tag, TagLabel, Divider, Icon,
   Avatar, Flex, useColorModeValue
 } from '@chakra-ui/react';
-import { FaLinkedin, FaGithub, FaBriefcase, FaCode, FaCheckCircle } from 'react-icons/fa';
+import { FaLinkedin, FaGithub, FaBriefcase, FaCode, FaCheckCircle, FaDownload } from 'react-icons/fa';
 
-export default function StepReview({ user, curriculo, habilidades }) {
+export default function StepReview({ user, curriculo, habilidades, handleDownloadPDF, isGeneratingPdf }) {
   const cardBg = useColorModeValue('gray.50', 'gray.700');
   const headingColor = useColorModeValue('gray.800', 'white');
   const textColor = useColorModeValue('gray.600', 'gray.300');
@@ -23,6 +23,18 @@ export default function StepReview({ user, curriculo, habilidades }) {
       <Text fontSize="sm" color={textColor}>
         Verifique seus dados abaixo antes de salvar. Clique em "Voltar" para corrigir qualquer informação.
       </Text>
+
+      <Button
+        leftIcon={<FaDownload />}
+        variant="outline"
+        colorScheme="blue"
+        size="sm"
+        alignSelf="flex-start"
+        onClick={handleDownloadPDF}
+        isLoading={isGeneratingPdf}
+      >
+        Pré-visualizar e Baixar Currículo em PDF
+      </Button>
 
       {/* Dados básicos */}
       <Box bg={cardBg} p={5} rounded="lg">

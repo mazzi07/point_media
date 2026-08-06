@@ -14,6 +14,8 @@ import StepBasicInfo from './wizard/StepBasicInfo';
 import StepExperience from './wizard/StepExperience';
 import StepSkills from './wizard/StepSkills';
 import StepReview from './wizard/StepReview';
+import ResumePDFTemplate from './ResumePDFTemplate';
+import html2pdf from 'html2pdf.js';
 
 export default function ResumeWizard() {
   const [currentStep, setCurrentStep] = useState(0);
@@ -153,6 +155,26 @@ export default function ResumeWizard() {
     }
   };
 
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
+  const handleDownloadPDF = () => {
+    setIsGeneratingPdf(true);
+    setTimeout(() => {
+      const element = document.getElementById('wizard-pdf-template');
+      const opt = {
+        margin:       10,
+        filename:     `curriculo_${user?.nome.replace(/\s+/g, '_').toLowerCase()}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      html2pdf().set(opt).from(element).save().then(() => {
+        setIsGeneratingPdf(false);
+      });
+    }, 100);
+  };
+
   const borderColor = useColorModeValue('gray.200', 'whiteAlpha.100');
   const cardBg = useColorModeValue('white', 'brand.cardBg');
 
@@ -174,7 +196,8 @@ export default function ResumeWizard() {
       case 2:
         return <StepSkills habilidades={habilidades} skillInput={skillInput} setSkillInput={setSkillInput} addSkill={addSkill} removeSkill={removeSkill} />;
       case 3:
-        return <StepReview user={user} curriculo={curriculo} habilidades={habilidades} />;
+        return <StepReview user={user} curriculo={curriculo} habilidades={habilidades} 
+                 handleDownloadPDF={handleDownloadPDF} isGeneratingPdf={isGeneratingPdf} />;
       default:
         return null;
     }
@@ -329,6 +352,13 @@ export default function ResumeWizard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Hidden PDF template for downloading */}
+      <div style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}>
+        <div id="wizard-pdf-template">
+          <ResumePDFTemplate user={user} curriculo={curriculo} habilidades={habilidades} />
+        </div>
+      </div>
     </Container>
   );
 }
