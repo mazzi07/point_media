@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Container, Heading, Text, Grid, Flex, useColorModeValue, Button, Tag, HStack, Input, InputGroup, InputLeftElement, Icon, VStack, Divider, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalFooter, ModalCloseButton, useDisclosure, useToast } from '@chakra-ui/react';
 import { FaSearch, FaBriefcase, FaReact, FaNodeJs, FaFigma, FaLaptopCode, FaPython, FaPalette, FaChartLine, FaRobot, FaAws } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { Skeleton, SkeletonCircle, SkeletonText } from '@chakra-ui/react';
@@ -9,7 +8,6 @@ import { api } from '../services/api';
 
 export default function Vagas() {
   const { openAuthModal, isLoggedIn } = useAuth();
-  const navigate = useNavigate();
   const bgCard = useColorModeValue('brand.lightCardBg', 'brand.cardBg');
   const border = useColorModeValue('transparent', 'whiteAlpha.100');
   const cardShadow = useColorModeValue('0 8px 30px rgba(0,0,0,0.04)', '0 10px 30px rgba(0,0,0,0.4)');
@@ -118,7 +116,7 @@ export default function Vagas() {
       } else {
         toast({ title: 'Atenção', description: data.message, status: 'warning' });
       }
-    } catch (err) {
+    } catch {
       toast({ title: 'Erro', description: 'Não foi possível realizar a candidatura.', status: 'error' });
     } finally {
       setIsApplying(false);

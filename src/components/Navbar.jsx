@@ -80,7 +80,7 @@ export default function Navbar() {
         } else {
           toast({ title: 'Erro ao atualizar foto.', status: 'error' });
         }
-      } catch (err) {
+      } catch {
         toast({ title: 'Erro de conexão.', status: 'error' });
       }
     };

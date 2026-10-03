@@ -1,12 +1,10 @@
 import React from 'react';
 import { Box, Container, Heading, Text, Grid, Flex, Icon, useColorModeValue, Button, Tag, HStack } from '@chakra-ui/react';
 import { FaRegLightbulb, FaBullseye, FaUsers, FaPaintBrush, FaChartLine, FaCogs, FaDatabase } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function Sobre() {
   const { openAuthModal } = useAuth();
-  const navigate = useNavigate();
   const bgCard = useColorModeValue('white', 'brand.cardBg');
   const border = useColorModeValue('gray.200', 'whiteAlpha.100');
   const textColor = useColorModeValue('gray.600', 'gray.400');

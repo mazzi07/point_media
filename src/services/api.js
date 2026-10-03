@@ -32,7 +32,7 @@ async function request(path, options = {}) {
         json: async () => ({ success: false, message: 'Servidor indisponível no momento' })
       };
     }
-  } catch (error) {
+  } catch {
     // sem conexao com o servidor
     return {
       ok: false,
