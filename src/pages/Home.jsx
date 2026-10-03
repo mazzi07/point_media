@@ -184,7 +184,7 @@ export default function Home() {
                     </Flex>
                     <Box>
                       <Text fontSize="md" fontWeight="500" color={headingColor}>{quiz.titulo}</Text>
-                      {completed && <Text fontSize="xs" color={hasBadge ? "blue.500" : "gray.500"}>Nota: {(myBadge.acertos / myBadge.total * 100).toFixed(0)}%</Text>}
+                      {completed && <Text fontSize="xs" color={hasBadge ? "blue.500" : "gray.500"}>Nota: {(myBadge.total > 0 ? myBadge.acertos / myBadge.total * 100 : 0).toFixed(0)}%</Text>}
                     </Box>
                   </HStack>
                   <Button size="sm" variant={completed ? "ghost" : "outline"} borderColor="whiteAlpha.200" color={completed ? "gray.500" : "brand.pink"}

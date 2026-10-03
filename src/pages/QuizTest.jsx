@@ -19,6 +19,7 @@ export default function QuizTest() {
   const [submitting, setSubmitting] = useState(false);
   const submissionLocked = useRef(false);
   const timeoutHandled = useRef(false);
+  const timeoutSubmission = useRef(null);
 
   const bgCard = useColorModeValue('white', 'brand.cardBg');
   const border = useColorModeValue('gray.200', 'whiteAlpha.100');
@@ -49,6 +50,7 @@ export default function QuizTest() {
   }, [id, navigate, toast]);
 
   // timer do quiz
+  const expired = !loading && timeLeft === 0;
   const timerRunning = !loading && !finished && timeLeft > 0;
   useEffect(() => {
     if (!timerRunning) return;
@@ -69,23 +71,31 @@ export default function QuizTest() {
   };
 
   const handleFinalizar = useCallback(async (timeOut = false) => {
-    if (!quiz || submissionLocked.current) return;
+    if (!quiz) return;
+    const expiredSubmission = timeOut || timeLeft === 0;
+    if (expiredSubmission && !timeoutSubmission.current) {
+      timeoutSubmission.current = {
+        respostas: { ...respostas },
+        tempoGasto: quiz.tempoMinutos * 60
+      };
+    }
+    if (submissionLocked.current) return;
 
-    if (!timeOut && Object.keys(respostas).length < quiz.perguntas.length) {
+    if (!expiredSubmission && Object.keys(respostas).length < quiz.perguntas.length) {
       toast({ title: 'Atenção', description: 'Responda todas as perguntas antes de finalizar.', status: 'warning' });
       return;
     }
 
     submissionLocked.current = true;
     setSubmitting(true);
-    const tempoGasto = (quiz.tempoMinutos * 60) - timeLeft;
+    const payload = expiredSubmission ? timeoutSubmission.current : {
+      respostas,
+      tempoGasto: (quiz.tempoMinutos * 60) - timeLeft
+    };
     let completed = false;
 
     try {
-      const response = await api.post(`/api/quizzes/${id}/responder`, {
-        respostas,
-        tempoGasto
-      });
+      const response = await api.post(`/api/quizzes/${id}/responder`, payload);
       const data = await response.json();
       
       if (response.ok && data.success) {
@@ -121,7 +131,7 @@ export default function QuizTest() {
   if (loading) return <Flex justify="center" pt={32}><CircularProgress isIndeterminate color="brand.pink" /></Flex>;
 
   if (finished && result) {
-    const pct = Math.round((result.acertos / result.total) * 100);
+    const pct = result.total > 0 ? Math.round((result.acertos / result.total) * 100) : 0;
     return (
       <Container maxW="3xl" pt={24} pb={20}>
         <Box bg={bgCard} p={10} borderRadius="2xl" border="1px solid" borderColor={border} textAlign="center">
@@ -157,6 +167,17 @@ export default function QuizTest() {
     );
   }
 
+  if (quiz.perguntas.length === 0) {
+    return (
+      <Flex pt={32} align="center" direction="column" gap={4}>
+        <Text>Este quiz não possui perguntas.</Text>
+        <Button variant="gradient" onClick={() => handleFinalizar()} isLoading={submitting}>
+          Finalizar Teste
+        </Button>
+      </Flex>
+    );
+  }
+
   const perguntaAtual = quiz.perguntas[currentQuestion];
   const progresso = ((currentQuestion + 1) / quiz.perguntas.length) * 100;
 
@@ -188,7 +209,9 @@ export default function QuizTest() {
           </Heading>
 
           <RadioGroup 
-            onChange={(val) => setRespostas(prev => ({ ...prev, [perguntaAtual.id]: val }))} 
+            onChange={(val) => {
+              if (!expired) setRespostas(prev => ({ ...prev, [perguntaAtual.id]: val }));
+            }}
             value={respostas[perguntaAtual.id] || ''}
           >
             <VStack align="stretch" spacing={4}>
@@ -207,7 +230,7 @@ export default function QuizTest() {
                     _hover={{ borderColor: 'brand.pink' }}
                     transition="all 0.2s"
                   >
-                    <Radio value={String(alt.id)} colorScheme="pink" size="lg" display="none" />
+                    <Radio value={String(alt.id)} colorScheme="pink" size="lg" display="none" isDisabled={expired} />
                     <Flex align="center">
                       <Box w={5} h={5} borderRadius="full" border="2px solid" borderColor={isSelected ? 'brand.pink' : textColor} display="flex" alignItems="center" justify="center" mr={4}>
                         {isSelected && <Box w={2.5} h={2.5} borderRadius="full" bg="brand.pink" />}
@@ -225,12 +248,12 @@ export default function QuizTest() {
               Anterior
             </Button>
             
-            {currentQuestion < quiz.perguntas.length - 1 ? (
+            {!expired && currentQuestion < quiz.perguntas.length - 1 ? (
               <Button variant="gradient" onClick={handleNext} isDisabled={!respostas[perguntaAtual.id]}>
                 Próxima questão
               </Button>
             ) : (
-              <Button variant="gradient" onClick={() => handleFinalizar(false)} isLoading={submitting} isDisabled={Object.keys(respostas).length < quiz.perguntas.length}>
+              <Button variant="gradient" onClick={() => handleFinalizar()} isLoading={submitting} isDisabled={!expired && Object.keys(respostas).length < quiz.perguntas.length}>
                 Finalizar Teste
               </Button>
             )}

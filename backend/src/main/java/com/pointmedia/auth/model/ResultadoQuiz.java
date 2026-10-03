@@ -4,7 +4,8 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "resultados_quiz")
+@Table(name = "resultados_quiz", uniqueConstraints = @UniqueConstraint(
+        name = "uk_resultado_usuario_quiz", columnNames = {"usuario_id", "quiz_id"}))
 public class ResultadoQuiz {
 
     @Id
@@ -21,16 +22,19 @@ public class ResultadoQuiz {
 
     private Integer nota;
     private Integer acertos;
+    @Column(name = "total_perguntas", nullable = false)
+    private Integer totalPerguntas;
     private Integer tempoGastoSegundos;
     private LocalDateTime dataRealizacao;
 
     public ResultadoQuiz() {}
 
-    public ResultadoQuiz(Usuario usuario, Quiz quiz, Integer nota, Integer acertos, Integer tempoGastoSegundos) {
+    public ResultadoQuiz(Usuario usuario, Quiz quiz, Integer nota, Integer acertos, Integer totalPerguntas, Integer tempoGastoSegundos) {
         this.usuario = usuario;
         this.quiz = quiz;
         this.nota = nota;
         this.acertos = acertos;
+        this.totalPerguntas = totalPerguntas;
         this.tempoGastoSegundos = tempoGastoSegundos;
         this.dataRealizacao = LocalDateTime.now();
     }
@@ -40,6 +44,7 @@ public class ResultadoQuiz {
     public Quiz getQuiz() { return quiz; }
     public Integer getNota() { return nota; }
     public Integer getAcertos() { return acertos; }
+    public Integer getTotalPerguntas() { return totalPerguntas; }
     public Integer getTempoGastoSegundos() { return tempoGastoSegundos; }
     public LocalDateTime getDataRealizacao() { return dataRealizacao; }
 }

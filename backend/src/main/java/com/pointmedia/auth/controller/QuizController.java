@@ -4,6 +4,8 @@ import com.pointmedia.auth.model.*;
 import com.pointmedia.auth.repository.QuizRepository;
 import com.pointmedia.auth.repository.ResultadoQuizRepository;
 import com.pointmedia.auth.repository.UsuarioRepository;
+import org.hibernate.exception.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -143,15 +145,31 @@ public class QuizController {
         // calculo da nota: 100 pontos por acerto
         int notaBase = acertos * 100;
         
-        ResultadoQuiz resultado = new ResultadoQuiz(usuario, quiz, notaBase, acertos, tempoGasto);
-        resultadoQuizRepository.save(resultado);
+        ResultadoQuiz resultado = new ResultadoQuiz(usuario, quiz, notaBase, acertos, totalPerguntas, tempoGasto);
+        resultadoQuizRepository.saveAndFlush(resultado);
 
         return ResponseEntity.ok(Map.of(
                 "success", true,
                 "acertos", acertos,
-                "total", totalPerguntas,
+                "total", resultado.getTotalPerguntas(),
                 "nota", notaBase
         ));
+    }
+
+    // A transação do envio já foi revertida quando o MVC trata a exceção.
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<?> handleResultadoDuplicado(DataIntegrityViolationException exception) {
+        for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
+            if (cause instanceof ConstraintViolationException violation) {
+                String constraint = violation.getConstraintName();
+                if (constraint != null && (constraint.equals("uk_resultado_usuario_quiz")
+                        || constraint.endsWith(".uk_resultado_usuario_quiz"))) {
+                    return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                            "success", false, "message", "Você já respondeu este quiz."));
+                }
+            }
+        }
+        throw exception;
     }
 
     @GetMapping("/ranking")
@@ -181,7 +199,7 @@ public class QuizController {
         
         List<Map<String, Object>> badges = resultados.stream()
             .map(r -> {
-                int total = r.getQuiz().getPerguntas().size();
+                int total = r.getTotalPerguntas();
                 double percentual = total == 0 ? 0 : (double) r.getAcertos() / total;
                 boolean ganhouBadge = percentual >= 0.7; // 70% ou mais ganha o selo
                 

@@ -42,7 +42,7 @@ public class AdminStatsController {
         // calcula media de acerto em porcentagem
         double mediaAcertosGeral = resultadoQuizRepository.findAll().stream()
                 .mapToDouble(r -> {
-                    int totalPerguntas = r.getQuiz().getPerguntas().size();
+                    int totalPerguntas = r.getTotalPerguntas();
                     if (totalPerguntas == 0) return 0.0;
                     return ((double) r.getAcertos() / totalPerguntas) * 100.0;
                 })
