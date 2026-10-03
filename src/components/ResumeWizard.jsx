@@ -87,14 +87,15 @@ export default function ResumeWizard() {
 
   const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 0));
 
-  const addSkill = (e) => {
-    if ((e.key === 'Enter' || e.type === 'click') && skillInput.trim()) {
-      e.preventDefault();
-      if (!habilidades.includes(skillInput.trim())) {
-        setHabilidades((prev) => [...prev, skillInput.trim()]);
-      }
-      setSkillInput('');
+  const addSkill = (value) => {
+    const skill = value?.trim();
+    if (!skill) return;
+
+    // Preserve existing case-sensitive includes logic as requested: "If duplicate comparison is currently case-sensitive, preserve that behavior"
+    if (!habilidades.includes(skill)) {
+      setHabilidades((prev) => [...prev, skill]);
     }
+    setSkillInput('');
   };
 
   const removeSkill = (s) => setHabilidades((prev) => prev.filter((h) => h !== s));

@@ -47,28 +47,11 @@ export default function StepSkills({ habilidades, skillInput, setSkillInput, add
       .slice(0, 8);
   }, [skillInput, habilidades]);
 
-  const handleSuggestionClick = (skill) => {
-    if (!habilidades.includes(skill)) {
-      addSkill({ type: 'click', preventDefault: () => {} }, skill);
-    }
-  };
-
-  // Enhanced addSkill that accepts an optional skill name override
-  const handleAddSkill = (e, overrideSkill) => {
-    if (overrideSkill) {
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
       e.preventDefault();
-      if (!habilidades.includes(overrideSkill)) {
-        // We call the parent addSkill with a synthetic event
-        const syntheticEvent = { key: 'Enter', preventDefault: () => {} };
-        setSkillInput(overrideSkill);
-        // Use timeout to let state update, then trigger
-        setTimeout(() => {
-          addSkill(syntheticEvent);
-        }, 0);
-      }
-      return;
+      addSkill(skillInput);
     }
-    addSkill(e);
   };
 
   return (
@@ -80,9 +63,9 @@ export default function StepSkills({ habilidades, skillInput, setSkillInput, add
           focusBorderColor="brand.blue"
           value={skillInput}
           onChange={(e) => setSkillInput(e.target.value)}
-          onKeyDown={addSkill}
+          onKeyDown={handleKeyDown}
         />
-        <Button variant="gradient" onClick={addSkill} px={6} data-skill-add-btn>
+        <Button variant="gradient" onClick={() => addSkill(skillInput)} px={6}>
           Adicionar
         </Button>
       </HStack>
@@ -108,14 +91,7 @@ export default function StepSkills({ habilidades, skillInput, setSkillInput, add
                 borderColor={suggestionBorderColor}
                 px={3}
                 py={1}
-                onClick={() => {
-                  setSkillInput(suggestion);
-                  // Simulate click add
-                  setTimeout(() => {
-                    const btn = document.querySelector('[data-skill-add-btn]');
-                    if (btn) btn.click();
-                  }, 10);
-                }}
+                onClick={() => addSkill(suggestion)}
               >
                 <Icon as={FaPlus} w={2} h={2} mr={1} />
                 <TagLabel fontSize="xs">{suggestion}</TagLabel>
