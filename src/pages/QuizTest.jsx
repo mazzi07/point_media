@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Box, Container, Heading, Text, Flex, Button, useColorModeValue, Progress, VStack, HStack, Grid, RadioGroup, Radio, useToast, CircularProgress, CircularProgressLabel, Icon } from '@chakra-ui/react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
@@ -17,6 +17,8 @@ export default function QuizTest() {
   const [finished, setFinished] = useState(false);
   const [result, setResult] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const submissionLocked = useRef(false);
+  const timeoutHandled = useRef(false);
 
   const bgCard = useColorModeValue('white', 'brand.cardBg');
   const border = useColorModeValue('gray.200', 'whiteAlpha.100');
@@ -47,18 +49,12 @@ export default function QuizTest() {
   }, [id, navigate, toast]);
 
   // timer do quiz
+  const timerRunning = !loading && !finished && timeLeft > 0;
   useEffect(() => {
-    if (loading || finished || timeLeft <= 0) return;
-    const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
+    if (!timerRunning) return;
+    const timer = setInterval(() => setTimeLeft(prev => Math.max(0, prev - 1)), 1000);
     return () => clearInterval(timer);
-  }, [loading, finished, timeLeft]);
-
-  // se o tempo acabar, envia automatico
-  useEffect(() => {
-    if (timeLeft === 0 && !loading && !finished) {
-      handleFinalizar(true);
-    }
-  }, [timeLeft, loading, finished]);
+  }, [timerRunning]);
 
   const handleNext = () => {
     if (currentQuestion < quiz.perguntas.length - 1) {
@@ -72,14 +68,18 @@ export default function QuizTest() {
     }
   };
 
-  const handleFinalizar = async (timeOut = false) => {
+  const handleFinalizar = useCallback(async (timeOut = false) => {
+    if (!quiz || submissionLocked.current) return;
+
     if (!timeOut && Object.keys(respostas).length < quiz.perguntas.length) {
       toast({ title: 'Atenção', description: 'Responda todas as perguntas antes de finalizar.', status: 'warning' });
       return;
     }
 
+    submissionLocked.current = true;
     setSubmitting(true);
     const tempoGasto = (quiz.tempoMinutos * 60) - timeLeft;
+    let completed = false;
 
     try {
       const response = await api.post(`/api/quizzes/${id}/responder`, {
@@ -89,6 +89,7 @@ export default function QuizTest() {
       const data = await response.json();
       
       if (response.ok && data.success) {
+        completed = true;
         setResult(data);
         setFinished(true);
       } else {
@@ -97,9 +98,19 @@ export default function QuizTest() {
     } catch {
       toast({ title: 'Erro de conexão.', status: 'error' });
     } finally {
+      // Libera uma nova tentativa manual apenas se o envio falhar.
+      submissionLocked.current = completed;
       setSubmitting(false);
     }
-  };
+  }, [quiz, respostas, timeLeft, id, toast]);
+
+  // Trata o fim do tempo uma vez, mesmo se respostas ou o envio mudarem.
+  useEffect(() => {
+    if (timeLeft === 0 && !loading && !finished && !timeoutHandled.current) {
+      timeoutHandled.current = true;
+      handleFinalizar(true);
+    }
+  }, [timeLeft, loading, finished, handleFinalizar]);
 
   const formatTime = (seconds) => {
     const m = Math.floor(seconds / 60).toString().padStart(2, '0');
