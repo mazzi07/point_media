@@ -7,7 +7,7 @@ import { FaPlay, FaMedal, FaTrophy, FaStar, FaBrain, FaCode, FaChartBar } from '
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 
 export default function Quizzes() {
   const navigate = useNavigate();

@@ -8,7 +8,7 @@ import {
   FaBriefcase, FaLinkedin, FaGithub, FaEdit, FaTrophy, FaCheckCircle,
   FaCode, FaClock, FaStar
 } from 'react-icons/fa';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useQuery } from '@tanstack/react-query';

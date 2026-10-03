@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { VStack, Heading, Box, Text, Input, useColorModeValue, Image, useToast, Spinner, Flex, Icon } from '@chakra-ui/react';
 import { FaCloudUploadAlt } from 'react-icons/fa';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/useAuth';
 import { api } from '../../services/api';
 
 export default function StepBasicInfo({ user, curriculo, handleChange }) {

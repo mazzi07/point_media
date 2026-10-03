@@ -8,7 +8,7 @@ import {
 import { Link as RouterLink, useNavigate, useLocation } from 'react-router-dom';
 import { FaBell, FaCircle, FaSun, FaMoon } from 'react-icons/fa';
 import pointLogo from '../assets/point.png';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { api } from '../services/api';
 
 export default function Navbar() {

@@ -7,7 +7,7 @@ import {
 import { FaCheck } from 'react-icons/fa';
 import AiMentorPanel from './AiMentorPanel';
 import { api } from '../services/api';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { useNavigate } from 'react-router-dom';
 
 import StepBasicInfo from './wizard/StepBasicInfo';

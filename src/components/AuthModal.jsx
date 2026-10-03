@@ -8,7 +8,7 @@ import {
 } from '@chakra-ui/react';
 import pointLogo from '../assets/point.png';
 import { FaEnvelope, FaLock, FaUser, FaBriefcase, FaStar, FaMagic, FaCheckCircle, FaChartLine, FaEye, FaEyeSlash } from 'react-icons/fa';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { api } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';

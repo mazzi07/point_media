@@ -3,7 +3,7 @@ import {
   Box, Heading, Text, SimpleGrid, Button, useColorModeValue,
   Container, VStack, HStack, Icon, Flex, Avatar, Tag, Grid, CircularProgress, CircularProgressLabel, Badge
 } from '@chakra-ui/react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { FaFileAlt, FaAward, FaTrophy, FaRegFileAlt, FaRegCheckCircle, FaRegBuilding, FaCheckCircle } from 'react-icons/fa';
@@ -12,6 +12,7 @@ import { useQuery } from '@tanstack/react-query';
 export default function Home() {
   const { isLoggedIn, user, hasResume, setHasResume, openAuthModal } = useAuth();
   const navigate = useNavigate();
+  const userEmail = user?.email;
   
 
   const bgCard    = useColorModeValue('brand.lightCardBg', 'brand.cardBg');
@@ -27,11 +28,13 @@ export default function Home() {
 
   // checa se o usuario ja tem curriculo
   useEffect(() => {
-    if (!isLoggedIn) return;
+    if (!isLoggedIn || !userEmail) return;
+    let active = true;
     api.get('/api/curriculo')
-      .then((res) => { if (res.ok) setHasResume(true); })
-      .catch(() => {});
-  }, [isLoggedIn, setHasResume]);
+      .then((res) => { if (active) setHasResume(res.ok); })
+      .catch(() => { if (active) setHasResume(false); });
+    return () => { active = false; };
+  }, [isLoggedIn, userEmail, setHasResume]);
 
   const { data: badges = [], isLoading: isLoadingBadges } = useQuery({
     queryKey: ['meus-badges'],

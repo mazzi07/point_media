@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Container, Heading, Text, Grid, Flex, useColorModeValue, Button, Tag, HStack, Input, InputGroup, InputLeftElement, Icon, VStack, Divider, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalFooter, ModalCloseButton, useDisclosure, useToast } from '@chakra-ui/react';
 import { FaSearch, FaBriefcase, FaReact, FaNodeJs, FaFigma, FaLaptopCode, FaPython, FaPalette, FaChartLine, FaRobot, FaAws } from 'react-icons/fa';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { Skeleton, SkeletonCircle, SkeletonText } from '@chakra-ui/react';
 import { api } from '../services/api';

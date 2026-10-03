@@ -15,7 +15,8 @@ import AdminPage from './pages/AdminPage'
 import Quizzes from './pages/Quizzes'
 import QuizTest from './pages/QuizTest'
 import Perfil from './pages/Perfil'
-import { AuthProvider, useAuth } from './context/AuthContext'
+import { AuthProvider } from './context/AuthContext'
+import { useAuth } from './context/useAuth'
 import AuthModal from './components/AuthModal'
 
 // rota que exige login de candidato
