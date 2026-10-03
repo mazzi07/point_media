@@ -43,12 +43,10 @@ public class AuthController {
             String nome = request.get("nome");
             String email = request.get("email");
             String senha = request.get("senha");
-            String tipoUsuarioStr = request.get("tipo_usuario");
 
             if (nome == null || nome.isBlank() ||
                 email == null || email.isBlank() ||
-                senha == null || senha.isBlank() ||
-                tipoUsuarioStr == null) {
+                senha == null || senha.isBlank()) {
                 return ResponseEntity.badRequest()
                     .body(Map.of("success", false, "message", "Todos os campos são obrigatórios."));
             }
@@ -63,7 +61,7 @@ public class AuthController {
                     .body(Map.of("success", false, "message", "E-mail já está em uso."));
             }
 
-            TipoUsuario tipoUsuario = TipoUsuario.valueOf(tipoUsuarioStr.toUpperCase());
+            TipoUsuario tipoUsuario = TipoUsuario.CANDIDATO;
             String senhaHash = passwordEncoder.encode(senha);
 
             Usuario novoUsuario = new Usuario(nome, email, senhaHash, tipoUsuario);
@@ -97,9 +95,6 @@ public class AuthController {
                 .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
                 .body(response);
 
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest()
-                .body(Map.of("success", false, "message", "Tipo de usuário inválido."));
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
                 .body(Map.of("success", false, "message", "Erro ao registrar usuário."));

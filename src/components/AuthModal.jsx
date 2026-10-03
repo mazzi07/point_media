@@ -94,8 +94,7 @@ export default function AuthModal() {
         nome: data.nome,
         email: data.email,
         senha: data.senha,
-        cargo: data.profissao,
-        tipo_usuario: 'CANDIDATO'
+        cargo: data.profissao
       };
       const response = await api.post('/api/auth/register', payload);
       const resData = await response.json();
