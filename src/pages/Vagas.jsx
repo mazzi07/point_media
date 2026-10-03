@@ -1,22 +1,22 @@
 import React, { useState } from 'react';
-import { Box, Container, Heading, Text, Grid, Flex, useColorModeValue, Button, Tag, HStack, Input, InputGroup, InputLeftElement, Icon, VStack, Divider, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalFooter, ModalCloseButton, useDisclosure, useToast } from '@chakra-ui/react';
-import { FaSearch, FaBriefcase, FaReact, FaNodeJs, FaFigma, FaLaptopCode, FaPython, FaPalette, FaChartLine, FaRobot, FaAws } from 'react-icons/fa';
+import { Box, Container, Heading, Text, Grid, Flex, useColorModeValue, Button, Tag, HStack, Input, InputGroup, InputLeftElement, Icon, VStack, Divider, useDisclosure, useToast } from '@chakra-ui/react';
+import { FaSearch, FaBriefcase } from 'react-icons/fa';
 import { useAuth } from '../context/useAuth';
 import { useQuery } from '@tanstack/react-query';
-import { Skeleton, SkeletonCircle, SkeletonText } from '@chakra-ui/react';
+import { Skeleton, SkeletonCircle } from '@chakra-ui/react';
 import { api } from '../services/api';
+import VagaCard from '../components/vagas/VagaCard';
+import VagaDetailsModal from '../components/vagas/VagaDetailsModal';
 
 export default function Vagas() {
   const { openAuthModal, isLoggedIn } = useAuth();
   const bgCard = useColorModeValue('brand.lightCardBg', 'brand.cardBg');
   const border = useColorModeValue('transparent', 'whiteAlpha.100');
   const cardShadow = useColorModeValue('0 8px 30px rgba(0,0,0,0.04)', '0 10px 30px rgba(0,0,0,0.4)');
-  const hoverShadow = useColorModeValue('0 12px 35px rgba(0,0,0,0.07)', '0 0 20px rgba(213, 24, 123, 0.2)');
   const textColor = useColorModeValue('gray.600', 'gray.400');
   const headingColor = useColorModeValue('#1B254B', 'white');
   const inputBg = useColorModeValue('gray.50', 'whiteAlpha.50');
   const listHoverBg = useColorModeValue('gray.50', 'whiteAlpha.100');
-  const closeBtnHoverBg = useColorModeValue('gray.50', 'whiteAlpha.100');
 
   const [activeFilter, setActiveFilter] = useState('Todos');
   const [searchTerm, setSearchTerm] = useState('');
@@ -32,39 +32,6 @@ export default function Vagas() {
   };
   
   const filters = ['Todos', 'Design', 'Marketing', 'Desenvolvimento', 'Vendas', 'Gestão'];
-
-  // retorna um icone baseado na area ou nas habilidades da vaga
-  const getIconForSkill = (area, habilidades = []) => {
-    const skillList = habilidades.map(h => h.toLowerCase());
-    const areaLower = area.toLowerCase();
-
-    if (skillList.includes('react') || skillList.includes('vue.js') || skillList.includes('typescript')) return <Icon as={FaReact} color="white" w={5} h={5} />;
-    if (skillList.includes('node.js') || skillList.includes('backend')) return <Icon as={FaNodeJs} color="white" w={5} h={5} />;
-    if (skillList.includes('figma') || skillList.includes('illustrator')) return <Icon as={FaFigma} color="white" w={5} h={5} />;
-    if (skillList.includes('python')) return <Icon as={FaPython} color="white" w={5} h={5} />;
-    if (skillList.includes('aws') || skillList.includes('cloud')) return <Icon as={FaAws} color="white" w={5} h={5} />;
-    if (areaLower.includes('design')) return <Icon as={FaPalette} color="white" w={5} h={5} />;
-    if (areaLower.includes('marketing') || skillList.includes('seo') || skillList.includes('ads')) return <Icon as={FaChartLine} color="white" w={5} h={5} />;
-    
-
-    return <Icon as={FaLaptopCode} color="white" w={5} h={5} />;
-  };
-
-  // cor do gradiente baseada na area
-  const getGradientForArea = (area) => {
-    const areaLower = area.toLowerCase();
-    if (areaLower === 'desenvolvimento') return 'linear-gradient(135deg, #0ea5e9, #3b82f6)';
-    if (areaLower === 'design') return 'linear-gradient(135deg, #d946ef, #9333ea)';
-    if (areaLower === 'marketing') return 'linear-gradient(135deg, #f43f5e, #be123c)';
-    return 'linear-gradient(135deg, #10b981, #059669)';
-  };
-
-  // cor da tag de tipo de trabalho
-  const getTypeColor = (tipo) => {
-    if (tipo === 'Remoto') return 'green';
-    if (tipo === 'Híbrido') return 'blue';
-    return 'orange';
-  };
 
   // busca as vagas da api
   const { data: vagas = [], isLoading: isLoadingVagas, refetch } = useQuery({
@@ -226,36 +193,7 @@ export default function Vagas() {
                 <VagaSkeleton /><VagaSkeleton /><VagaSkeleton />
               </>
             ) : vagas.map(vaga => (
-              <Box key={vaga.id} bg={bgCard} p={6} borderRadius="2xl" border="1px solid" borderColor={border} boxShadow={cardShadow} display="flex" flexDirection="column"
-                transition="all 0.3s" _hover={{ transform: 'translateY(-4px)', boxShadow: hoverShadow, borderColor: 'brand.pink' }}>
-                <Flex justify="space-between" align="flex-start" mb={4}>
-                  <Flex w={12} h={12} borderRadius="10px" background={getGradientForArea(vaga.area)} align="center" justify="center">
-                    {getIconForSkill(vaga.area, vaga.habilidades)}
-                  </Flex>
-                  <Tag size="sm" colorScheme={getTypeColor(vaga.tipoTrabalho)} borderRadius="full" px={3} opacity={0.9} variant="solid">
-                    {vaga.tipoTrabalho}
-                  </Tag>
-                </Flex>
-                <Heading size="sm" color={headingColor} mb={2}>{vaga.titulo}</Heading>
-                <HStack spacing={4} mb={4} color={textColor} fontSize="xs">
-                  <Text><Icon as={FaBriefcase} mr={1} /> Point Media</Text>
-                  <Text>{vaga.area}</Text>
-                </HStack>
-                
-                <HStack spacing={2} mb={6} flexWrap="wrap">
-                  {vaga.habilidades && vaga.habilidades.map(skill => (
-                    <Tag key={skill} size="sm" bg="transparent" border="1px solid" borderColor={border} color={textColor} borderRadius="full" px={3} mt={1}>
-                      {skill}
-                    </Tag>
-                  ))}
-                </HStack>
-
-                <Flex mt="auto" pt={5} borderTop="1px solid" borderColor={border} justify="center" align="center">
-                  <Button variant="gradient" size="sm" w="full" fontSize="sm" onClick={() => handleOpenModal(vaga)}>
-                    Saiba Mais
-                  </Button>
-                </Flex>
-              </Box>
+              <VagaCard key={vaga.id} vaga={vaga} onOpenModal={handleOpenModal} />
             ))}
           </Grid>
           
@@ -319,62 +257,14 @@ export default function Vagas() {
         </Button>
       </Container>
 
-
-      <Modal isOpen={isOpen} onClose={onClose} size="lg" isCentered>
-        <ModalOverlay backdropFilter="blur(4px)" />
-        <ModalContent bg={bgCard} border="1px solid" borderColor={border} borderRadius="2xl" mx={4}>
-          <ModalHeader pt={6} pb={0}>
-            <Heading size="md" color={headingColor}>{selectedVaga?.titulo}</Heading>
-          </ModalHeader>
-          <ModalCloseButton mt={2} color={textColor} _hover={{ color: headingColor }} />
-          <ModalBody py={6}>
-            <HStack spacing={4} mb={6} flexWrap="wrap">
-              <Tag size="md" bg="rgba(213, 24, 123, 0.1)" color="brand.pink" borderRadius="full" px={4} py={1.5} fontWeight="600">
-                <Icon as={FaBriefcase} mr={2} /> Point Media
-              </Tag>
-              <Tag size="md" colorScheme={selectedVaga ? getTypeColor(selectedVaga.tipoTrabalho) : 'gray'} borderRadius="full" px={4} py={1.5} variant="solid">
-                {selectedVaga?.tipoTrabalho}
-              </Tag>
-            </HStack>
-
-            <Box mb={6}>
-              <Text fontSize="sm" fontWeight="600" color={headingColor} mb={2}>Área de Atuação</Text>
-              <Text fontSize="sm" color={textColor}>{selectedVaga?.area}</Text>
-            </Box>
-
-            <Box mb={6}>
-              <Text fontSize="sm" fontWeight="600" color={headingColor} mb={2}>Salário / Remuneração</Text>
-              <Text fontSize="sm" color="green.400" fontWeight="600">{selectedVaga?.salario}</Text>
-            </Box>
-
-            <Box>
-              <Text fontSize="sm" fontWeight="600" color={headingColor} mb={3}>Habilidades Desejadas</Text>
-              <HStack spacing={2} flexWrap="wrap">
-                {selectedVaga?.habilidades?.map(skill => (
-                  <Tag key={skill} size="md" bg="rgba(59, 130, 246, 0.1)" color="brand.blue" borderRadius="full" px={4} py={1.5} mb={2}>
-                    {skill}
-                  </Tag>
-                ))}
-              </HStack>
-            </Box>
-          </ModalBody>
-
-          <ModalFooter borderTop="1px solid" borderColor={border} pt={5} pb={6}>
-            <Button variant="outline" mr={3} onClick={onClose} borderColor={border} color={textColor} _hover={{ bg: closeBtnHoverBg }}>
-              Fechar
-            </Button>
-            {minhasCandidaturas.some(c => c.vagaId === selectedVaga?.id) ? (
-              <Button colorScheme="green" flex="1" isDisabled>
-                Já Candidatado
-              </Button>
-            ) : (
-              <Button variant="gradient" flex="1" isLoading={isApplying} onClick={handleCandidatar}>
-                Candidatar-se agora
-              </Button>
-            )}
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      <VagaDetailsModal
+        isOpen={isOpen}
+        onClose={onClose}
+        vaga={selectedVaga}
+        isApplied={minhasCandidaturas.some(c => c.vagaId === selectedVaga?.id)}
+        isApplying={isApplying}
+        onApply={handleCandidatar}
+      />
     </Box>
   );
 }

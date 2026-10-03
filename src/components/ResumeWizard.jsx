@@ -24,7 +24,7 @@ export default function ResumeWizard() {
   const toast = useToast();
   const { user, setHasResume } = useAuth();
 
-  // dados do curriculo
+
   const [curriculo, setCurriculo] = useState({
     cargo: '',
     experiencia: '',
@@ -37,7 +37,7 @@ export default function ResumeWizard() {
   const [loadingData, setLoadingData] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // carrega curriculo existente do banco
+
   useEffect(() => {
     api.get('/api/curriculo')
       .then(async (res) => {
@@ -60,7 +60,6 @@ export default function ResumeWizard() {
     setCurriculo((prev) => ({ ...prev, [field]: e.target.value }));
 
   const handleNextStep = () => {
-    // valida passo 0
     if (currentStep === 0) {
       if (!user?.hasCurriculo && (!curriculo.linkedin.trim() || !curriculo.github.trim())) {
         setIsAlertOpen(true);
@@ -68,7 +67,6 @@ export default function ResumeWizard() {
       }
     }
 
-    // valida passo 1
     if (currentStep === 1) {
       if (!curriculo.cargo.trim() || !curriculo.experiencia.trim()) {
         toast({ title: 'Campos Obrigatórios', description: 'Por favor, preencha Cargo e Experiência.', status: 'warning', duration: 4000, position: 'top' });
@@ -76,7 +74,6 @@ export default function ResumeWizard() {
       }
     }
 
-    // valida passo 2
     if (currentStep === 2 && habilidades.length === 0) {
       toast({ title: 'Habilidades', description: 'Adicione pelo menos uma habilidade.', status: 'warning', duration: 4000, position: 'top' });
       return;
@@ -91,7 +88,6 @@ export default function ResumeWizard() {
     const skill = value?.trim();
     if (!skill) return;
 
-    // Preserve existing case-sensitive includes logic as requested: "If duplicate comparison is currently case-sensitive, preserve that behavior"
     if (!habilidades.includes(skill)) {
       setHabilidades((prev) => [...prev, skill]);
     }
@@ -188,7 +184,6 @@ export default function ResumeWizard() {
     );
   }
 
-  // mostra o conteudo do passo atual
   const renderStepContent = () => {
     switch (currentStep) {
       case 0:
@@ -263,7 +258,7 @@ export default function ResumeWizard() {
         <GridItem>
           <Box bg={cardBg} p={{ base: 6, md: 8 }} rounded="lg" border="1px solid" borderColor={borderColor}>
             
-            {/* conteudo do passo */}
+
             {renderStepContent()}
 
 
