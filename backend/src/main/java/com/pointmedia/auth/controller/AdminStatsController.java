@@ -34,7 +34,7 @@ public class AdminStatsController {
 
     @GetMapping
     public ResponseEntity<?> getStats() {
-        long totalCandidatos = curriculoRepository.count();
+        long totalCandidatos = curriculoRepository.countCandidatosComCandidatura();
         long totalVagas = vagaRepository.count();
         long totalQuizzesRealizados = resultadoQuizRepository.count();
         long totalCandidaturas = candidaturaRepository.count();
