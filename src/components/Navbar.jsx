@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box, Flex, Button, useColorModeValue, useColorMode, HStack, Link,
   IconButton, Image, Menu, MenuButton, MenuList, MenuItem, Avatar, Text,
@@ -37,28 +37,45 @@ export default function Navbar() {
   const resumeBtnBorder = useColorModeValue('blue.100', 'whiteAlpha.200');
 
   // notificacoes do usuario
-  const [notificacoes, setNotificacoes]     = useState([]);
-  const [naoLidas, setNaoLidas]             = useState(0);
+  const userEmail = isLoggedIn ? user?.email : null;
+  const [notificationState, setNotificationState] = useState(() => ({
+    userEmail, notificacoes: [], naoLidas: 0
+  }));
+  const notificationScope = useRef(null);
 
-  const fetchNotificacoes = useCallback(() => {
-    if (!isLoggedIn) return;
-    api.get('/api/notificacoes')
-      .then(async (res) => {
-        if (res.ok) {
-          const data = await res.json();
-          setNotificacoes(data);
-          setNaoLidas(data.filter((n) => !n.lida).length);
-        }
-      })
-      .catch(() => {});
-  }, [isLoggedIn]);
+  // Limpa antes de renderizar os dados de uma conta diferente.
+  if (notificationState.userEmail !== userEmail) {
+    setNotificationState({ userEmail, notificacoes: [], naoLidas: 0 });
+  }
+  const notificacoes = notificationState.userEmail === userEmail ? notificationState.notificacoes : [];
+  const naoLidas = notificationState.userEmail === userEmail ? notificationState.naoLidas : 0;
 
   // busca notificacoes ao logar e atualiza a cada 30s
   useEffect(() => {
+    if (!isLoggedIn || !userEmail) return;
+    const scope = { active: true };
+    notificationScope.current = scope;
+    const fetchNotificacoes = () => {
+      api.get('/api/notificacoes')
+        .then(async (res) => {
+          if (res.ok) {
+            const data = await res.json();
+            if (scope.active) {
+              setNotificationState({
+                userEmail, notificacoes: data, naoLidas: data.filter((n) => !n.lida).length
+              });
+            }
+          }
+        })
+        .catch(() => {});
+    };
     fetchNotificacoes();
     const interval = setInterval(fetchNotificacoes, 30000);
-    return () => clearInterval(interval);
-  }, [fetchNotificacoes]);
+    return () => {
+      scope.active = false;
+      clearInterval(interval);
+    };
+  }, [isLoggedIn, userEmail]);
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
@@ -88,11 +105,15 @@ export default function Navbar() {
   };
 
   const marcarLida = async (id) => {
+    const scope = notificationScope.current;
+    if (!scope?.active) return;
     await api.put(`/api/notificacoes/${id}/ler`);
-    setNotificacoes((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, lida: true } : n))
-    );
-    setNaoLidas((prev) => Math.max(0, prev - 1));
+    if (!scope.active) return;
+    setNotificationState((prev) => ({
+      ...prev,
+      notificacoes: prev.notificacoes.map((n) => (n.id === id ? { ...n, lida: true } : n)),
+      naoLidas: Math.max(0, prev.naoLidas - 1)
+    }));
   };
 
   const navLinks = [
