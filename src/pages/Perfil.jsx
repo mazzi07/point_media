@@ -29,6 +29,7 @@ export default function Perfil() {
   const tagBg = useColorModeValue('blue.50', 'whiteAlpha.100');
   const tagColor = useColorModeValue('brand.blue', 'white');
   const sectionBg = useColorModeValue('gray.50', 'gray.700');
+  const avatarBorderColor = useColorModeValue('white', 'gray.700');
 
   // Fetch resume data
   const { data: curriculo, isLoading: isLoadingCurriculo } = useQuery({
@@ -119,7 +120,7 @@ export default function Perfil() {
               bg="brand.blue"
               color="white"
               border="4px solid"
-              borderColor={useColorModeValue('white', 'gray.700')}
+              borderColor={avatarBorderColor}
               boxShadow="lg"
             />
             <Box flex={1} textAlign={{ base: 'center', md: 'left' }}>

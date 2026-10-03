@@ -9,6 +9,12 @@ export default function StepBasicInfo({ user, curriculo, handleChange }) {
   const toast = useToast();
   const [uploading, setUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const headingColor = useColorModeValue('gray.800', 'white');
+  const accountBg = useColorModeValue('gray.50', 'gray.700');
+  const mutedTextColor = useColorModeValue('gray.400', 'gray.500');
+  const accountTextColor = useColorModeValue('gray.700', 'gray.200');
+  const uploadBorderColor = useColorModeValue('gray.300', 'gray.600');
+  const uploadTextColor = useColorModeValue('gray.600', 'gray.300');
 
   const processFile = (file) => {
     if (!file) return;
@@ -70,17 +76,17 @@ export default function StepBasicInfo({ user, curriculo, handleChange }) {
 
   return (
     <VStack spacing={5} align="stretch">
-      <Heading size="sm" color={useColorModeValue('gray.800', 'white')}>Dados Básicos</Heading>
+      <Heading size="sm" color={headingColor}>Dados Básicos</Heading>
 
       {/* Info do usuário (somente leitura) */}
-      <Box p={4} bg={useColorModeValue('gray.50', 'gray.700')} rounded="md">
-        <Text fontSize="xs" color={useColorModeValue('gray.400', 'gray.500')} mb={1}>Conta vinculada</Text>
-        <Text fontSize="sm" fontWeight="500" color={useColorModeValue('gray.700', 'gray.200')}>
+      <Box p={4} bg={accountBg} rounded="md">
+        <Text fontSize="xs" color={mutedTextColor} mb={1}>Conta vinculada</Text>
+        <Text fontSize="sm" fontWeight="500" color={accountTextColor}>
           {user?.nome} — {user?.email}
         </Text>
       </Box>
 
-      <Box border="2px dashed" borderColor={isDragging ? 'brand.pink' : useColorModeValue('gray.300', 'gray.600')}
+      <Box border="2px dashed" borderColor={isDragging ? 'brand.pink' : uploadBorderColor}
         bg={isDragging ? 'rgba(213, 24, 123, 0.05)' : 'transparent'}
         p={5} rounded="md" textAlign="center" position="relative" overflow="hidden"
         _hover={{ borderColor: 'brand.blue' }} transition="all 0.2s"
@@ -102,8 +108,8 @@ export default function StepBasicInfo({ user, curriculo, handleChange }) {
           </Flex>
         ) : (
           <Box>
-            <Icon as={FaCloudUploadAlt} w={6} h={6} color={useColorModeValue('gray.400', 'gray.500')} mb={2} />
-            <Text fontSize="sm" fontWeight="500" color={useColorModeValue('gray.600', 'gray.300')} mb={1}>
+            <Icon as={FaCloudUploadAlt} w={6} h={6} color={mutedTextColor} mb={2} />
+            <Text fontSize="sm" fontWeight="500" color={uploadTextColor} mb={1}>
               Foto de Perfil
             </Text>
             <Text fontSize="xs" color="gray.400">Arraste ou clique para enviar (máx 1MB)</Text>

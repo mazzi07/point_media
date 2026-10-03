@@ -177,6 +177,13 @@ export default function ResumeWizard() {
 
   const borderColor = useColorModeValue('gray.200', 'whiteAlpha.100');
   const cardBg = useColorModeValue('white', 'brand.cardBg');
+  const headingColor = useColorModeValue('gray.900', 'white');
+  const mutedTextColor = useColorModeValue('gray.500', 'gray.400');
+  const stepLineBg = useColorModeValue('gray.200', 'gray.700');
+  const inactiveStepBg = useColorModeValue('gray.200', 'whiteAlpha.200');
+  const inactiveStepColor = useColorModeValue('gray.400', 'gray.500');
+  const activeStepLabelColor = useColorModeValue('gray.800', 'white');
+  const dialogTextColor = useColorModeValue('gray.600', 'gray.300');
 
   if (loadingData) {
     return (
@@ -210,10 +217,10 @@ export default function ResumeWizard() {
         <Text fontSize="xs" fontWeight="600" textTransform="uppercase" letterSpacing="0.1em" color="brand.blue" mb={2}>
           Currículo
         </Text>
-        <Heading size="lg" color={useColorModeValue('gray.900', 'white')} mb={1}>
+        <Heading size="lg" color={headingColor} mb={1}>
           {user?.nome || 'Seu perfil'}
         </Heading>
-        <Text color={useColorModeValue('gray.500', 'gray.400')} fontSize="sm">
+        <Text color={mutedTextColor} fontSize="sm">
           Preencha as etapas abaixo. Suas informações são salvas ao finalizar.
         </Text>
       </Box>
@@ -229,16 +236,16 @@ export default function ResumeWizard() {
             <Flex key={label} flex={1} direction="column" align="center" position="relative">
               {idx > 0 && (
                 <Box position="absolute" top="12px" left={0} right="50%" h="2px"
-                  bg={activeLine ? 'brand.pink' : useColorModeValue('gray.200', 'gray.700')} />
+                  bg={activeLine ? 'brand.pink' : stepLineBg} />
               )}
               {idx < steps.length - 1 && (
                 <Box position="absolute" top="12px" left="50%" right={0} h="2px"
-                  bg={isCompleted ? 'brand.pink' : useColorModeValue('gray.200', 'gray.700')} />
+                  bg={isCompleted ? 'brand.pink' : stepLineBg} />
               )}
               <Flex
                 w={6} h={6} align="center" justify="center" borderRadius="full" zIndex={1} mb={2}
-                bg={isActive || isCompleted ? 'brand.pink' : useColorModeValue('gray.200', 'whiteAlpha.200')}
-                color={isActive || isCompleted ? 'white' : useColorModeValue('gray.400', 'gray.500')}
+                bg={isActive || isCompleted ? 'brand.pink' : inactiveStepBg}
+                color={isActive || isCompleted ? 'white' : inactiveStepColor}
                 fontSize="xs" fontWeight="600"
               >
                 {isCompleted ? <Icon as={FaCheck} w={3} h={3} /> : idx + 1}
@@ -246,7 +253,7 @@ export default function ResumeWizard() {
               <Text
                 fontSize="xs"
                 fontWeight={isActive ? '600' : '400'}
-                color={isActive ? useColorModeValue('gray.800', 'white') : useColorModeValue('gray.400', 'gray.500')}
+                color={isActive ? activeStepLabelColor : inactiveStepColor}
                 textAlign="center"
               >
                 {label}
@@ -267,7 +274,7 @@ export default function ResumeWizard() {
 
             <Flex mt={8} justify="space-between" pt={5} borderTop="1px solid" borderColor={borderColor}>
               <Button onClick={prevStep} isDisabled={currentStep === 0} variant="ghost" size="sm"
-                fontWeight="400" color={useColorModeValue('gray.500', 'gray.400')}>
+                fontWeight="400" color={mutedTextColor}>
                 Voltar
               </Button>
               {currentStep < steps.length - 1 ? (
@@ -299,17 +306,17 @@ export default function ResumeWizard() {
       >
         <AlertDialogOverlay backdropFilter="blur(4px)" />
         <AlertDialogContent bg={cardBg} border="1px solid" borderColor={borderColor}>
-          <AlertDialogHeader fontSize="lg" fontWeight="bold" color={useColorModeValue('gray.900', 'white')}>
+          <AlertDialogHeader fontSize="lg" fontWeight="bold" color={headingColor}>
             Campos Opcionais em Branco
           </AlertDialogHeader>
 
-          <AlertDialogBody color={useColorModeValue('gray.600', 'gray.300')}>
+          <AlertDialogBody color={dialogTextColor}>
             Você não preencheu o <strong>LinkedIn</strong> e/ou <strong>GitHub</strong>. 
             Isso pode diminuir suas chances de destaque entre os recrutadores. Tem certeza de que deseja continuar sem eles?
           </AlertDialogBody>
 
           <AlertDialogFooter>
-            <Button ref={cancelRef} onClick={() => setIsAlertOpen(false)} variant="ghost" color={useColorModeValue('gray.600', 'gray.300')}>
+            <Button ref={cancelRef} onClick={() => setIsAlertOpen(false)} variant="ghost" color={dialogTextColor}>
               Voltar e Preencher
             </Button>
             <Button variant="gradient" onClick={() => { setIsAlertOpen(false); setCurrentStep(1); }} ml={3}>
@@ -328,11 +335,11 @@ export default function ResumeWizard() {
       >
         <AlertDialogOverlay backdropFilter="blur(4px)" />
         <AlertDialogContent bg={cardBg} border="1px solid" borderColor={borderColor}>
-          <AlertDialogHeader fontSize="lg" fontWeight="bold" color={useColorModeValue('gray.900', 'white')}>
+          <AlertDialogHeader fontSize="lg" fontWeight="bold" color={headingColor}>
             🎉 Currículo Salvo com Sucesso!
           </AlertDialogHeader>
 
-          <AlertDialogBody color={useColorModeValue('gray.600', 'gray.300')}>
+          <AlertDialogBody color={dialogTextColor}>
             Seu currículo foi atualizado e agora você está visível para oportunidades.
             <br/><br/>
             <strong>Deseja colocar seu conhecimento em prática agora mesmo?</strong>
@@ -343,7 +350,7 @@ export default function ResumeWizard() {
           </AlertDialogBody>
 
           <AlertDialogFooter>
-            <Button ref={cancelRef} onClick={() => { setIsSuccessModalOpen(false); navigate('/'); }} variant="ghost" color={useColorModeValue('gray.600', 'gray.300')}>
+            <Button ref={cancelRef} onClick={() => { setIsSuccessModalOpen(false); navigate('/'); }} variant="ghost" color={dialogTextColor}>
               Voltar ao Início
             </Button>
             <Button variant="gradient" onClick={() => { setIsSuccessModalOpen(false); navigate('/quizzes'); }} ml={3}>

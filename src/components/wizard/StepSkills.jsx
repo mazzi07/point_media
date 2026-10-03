@@ -29,6 +29,10 @@ export default function StepSkills({ habilidades, skillInput, setSkillInput, add
   const sugHoverBg = useColorModeValue('gray.100', 'whiteAlpha.100');
   const sugColor = useColorModeValue('gray.600', 'gray.300');
   const labelColor = useColorModeValue('gray.400', 'gray.500');
+  const headingColor = useColorModeValue('gray.800', 'white');
+  const suggestionBorderColor = useColorModeValue('gray.300', 'gray.600');
+  const skillTagBg = useColorModeValue('blue.50', 'whiteAlpha.100');
+  const skillTagColor = useColorModeValue('brand.blue', 'white');
 
   // Filter suggestions based on input, excluding already-added skills
   const filteredSuggestions = useMemo(() => {
@@ -69,7 +73,7 @@ export default function StepSkills({ habilidades, skillInput, setSkillInput, add
 
   return (
     <VStack spacing={5} align="stretch">
-      <Heading size="sm" color={useColorModeValue('gray.800', 'white')}>Habilidades Técnicas</Heading>
+      <Heading size="sm" color={headingColor}>Habilidades Técnicas</Heading>
       <HStack>
         <Input
           placeholder="Ex: React, Java, Figma (Enter para adicionar)"
@@ -101,7 +105,7 @@ export default function StepSkills({ habilidades, skillInput, setSkillInput, add
                 transition="all 0.15s"
                 _hover={{ bg: sugHoverBg, color: 'brand.blue', borderColor: 'brand.blue' }}
                 border="1px dashed"
-                borderColor={useColorModeValue('gray.300', 'gray.600')}
+                borderColor={suggestionBorderColor}
                 px={3}
                 py={1}
                 onClick={() => {
@@ -131,7 +135,7 @@ export default function StepSkills({ habilidades, skillInput, setSkillInput, add
         <Flex wrap="wrap" gap={2} minH="40px">
           {habilidades.map((skill) => (
             <Tag key={skill} size="md" rounded="full"
-              bg={useColorModeValue('blue.50', 'whiteAlpha.100')} color={useColorModeValue('brand.blue', 'white')} border="1px solid" borderColor="brand.blue" px={3}>
+              bg={skillTagBg} color={skillTagColor} border="1px solid" borderColor="brand.blue" px={3}>
               <TagLabel fontSize="sm">{skill}</TagLabel>
               <TagCloseButton onClick={() => removeSkill(skill)} />
             </Tag>
