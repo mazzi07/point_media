@@ -93,8 +93,7 @@ export default function AuthModal() {
       const payload = {
         nome: data.nome,
         email: data.email,
-        senha: data.senha,
-        cargo: data.profissao
+        senha: data.senha
       };
       const response = await api.post('/api/auth/register', payload);
       const resData = await response.json();

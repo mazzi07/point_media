@@ -190,6 +190,7 @@ public class QuizController {
                 map.put("quizId", r.getQuiz().getId());
                 map.put("titulo", r.getQuiz().getTitulo());
                 map.put("acertos", r.getAcertos());
+                map.put("nota", r.getNota());
                 map.put("total", total);
                 map.put("ganhouBadge", ganhouBadge);
                 map.put("dataRealizacao", r.getDataRealizacao());

@@ -267,7 +267,7 @@ export default function Perfil() {
           ) : candidaturas.length > 0 ? (
             <VStack spacing={3} align="stretch">
               {candidaturas.map((cand) => (
-                <Flex key={cand.id} bg={sectionBg} p={4} borderRadius="lg" border="1px solid"
+                <Flex key={cand.vagaId} bg={sectionBg} p={4} borderRadius="lg" border="1px solid"
                   borderColor={border} justify="space-between" align="center" flexWrap="wrap" gap={2}>
                   <Box>
                     <Text fontWeight="600" fontSize="sm" color={headingColor}>{cand.titulo || 'Vaga'}</Text>

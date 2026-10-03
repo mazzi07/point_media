@@ -142,7 +142,7 @@ export default function Home() {
           ) : candidaturas.length > 0 ? (
             <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
               {candidaturas.map((cand) => (
-                <Box key={cand.id} bg={bgCard} border="1px solid" borderColor={border} boxShadow={cardShadow} rounded="2xl" p={6}
+                <Box key={cand.vagaId} bg={bgCard} border="1px solid" borderColor={border} boxShadow={cardShadow} rounded="2xl" p={6}
                      transition="all 0.3s" _hover={{ borderColor: hoverBorder, boxShadow: hoverShadow }}>
                   <Badge colorScheme="green" mb={3}>Inscrito</Badge>
                   <Heading size="sm" color={headingColor} mb={2}>{cand.titulo}</Heading>
