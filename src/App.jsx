@@ -10,8 +10,8 @@ import Footer from './components/Footer'
 import Home from './pages/Home'
 import Sobre from './pages/Sobre'
 import Vagas from './pages/Vagas'
-import CriarPerfil from './pages/CriarPerfil'
 import AdminPage from './pages/AdminPage'
+import ResumeWizard from './components/ResumeWizard'
 import Quizzes from './pages/Quizzes'
 import QuizTest from './pages/QuizTest'
 import Perfil from './pages/Perfil'
@@ -50,7 +50,7 @@ function App() {
               <Route path="/quizzes" element={<Quizzes />} />
               <Route path="/quizzes/:id" element={<QuizTest />} />
               <Route path="/criar-perfil" element={
-                <PrivateRoute><CriarPerfil /></PrivateRoute>
+                <PrivateRoute><ResumeWizard /></PrivateRoute>
               } />
               <Route path="/perfil" element={
                 <PrivateRoute><Perfil /></PrivateRoute>
