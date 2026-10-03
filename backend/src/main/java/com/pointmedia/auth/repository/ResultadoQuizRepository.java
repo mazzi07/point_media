@@ -14,7 +14,7 @@ public interface ResultadoQuizRepository extends JpaRepository<ResultadoQuiz, Lo
     List<ResultadoQuiz> findByUsuario(Usuario usuario);
     Optional<ResultadoQuiz> findByUsuarioAndQuiz(Usuario usuario, Quiz quiz);
 
-    @Query("SELECT r.usuario.id as usuarioId, r.usuario.nome as nome, r.usuario.email as email, " +
+    @Query("SELECT r.usuario.id as usuarioId, r.usuario.nome as nome, " +
            "r.usuario.avatar as avatar, SUM(r.nota) as pontuacaoGeral, COUNT(r.id) as quizzesRealizados, " +
            "AVG(CASE WHEN SIZE(r.quiz.perguntas) = 0 THEN 0.0 " +
            "ELSE 100.0 * r.acertos / SIZE(r.quiz.perguntas) END) as mediaAcertos " +

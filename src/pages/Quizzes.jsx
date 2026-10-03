@@ -146,9 +146,8 @@ export default function Quizzes() {
                     {ranking[1] && (
                       <Box bg={bgCard} p={6} borderRadius="2xl" border="1px solid" borderColor={border} w="280px" textAlign="center" position="relative" mt={10}>
                         <Flex position="absolute" top="-20px" left="50%" transform="translateX(-50%)" w="40px" h="40px" bg="gray.400" borderRadius="full" align="center" justify="center" color="white" fontWeight="bold" border="4px solid" borderColor="brand.bg">2</Flex>
-                        <Avatar size="xl" src={ranking[1].avatar} name={ranking[1].nome} mb={4} mt={4} border="4px solid" borderColor="gray.400" />
-                        <Heading size="md" color={headingColor}>{ranking[1].nome}</Heading>
-                        <Text fontSize="xs" color={textColor} mb={2}>@{ranking[1].email.split('@')[0]}</Text>
+                        <Avatar size="xl" src={ranking[1].avatar} name={ranking[1].nome || 'Usuário'} mb={4} mt={4} border="4px solid" borderColor="gray.400" />
+                        <Heading size="md" color={headingColor} mb={2}>{ranking[1].nome || 'Usuário'}</Heading>
                         <Heading size="lg" color="brand.pink" mb={3}>{ranking[1].pontuacaoGeral} pts</Heading>
                       </Box>
                     )}
@@ -158,9 +157,8 @@ export default function Quizzes() {
                       <Box bg={bgCard} p={8} borderRadius="2xl" border="2px solid" borderColor="brand.pink" w="320px" textAlign="center" position="relative" boxShadow="0 0 40px rgba(213, 24, 123, 0.2)" zIndex={2}>
                         <Flex position="absolute" top="-25px" left="50%" transform="translateX(-50%)" w="50px" h="50px" bg="yellow.400" borderRadius="full" align="center" justify="center" color="gray.900" fontWeight="bold" fontSize="xl" border="4px solid" borderColor="brand.bg" boxShadow="0 0 15px rgba(236, 201, 75, 0.6)">1</Flex>
                         <Icon as={FaTrophy} color="yellow.400" position="absolute" top={4} right={4} fontSize="xl" />
-                        <Avatar size="2xl" src={ranking[0].avatar} name={ranking[0].nome} mb={4} mt={4} border="4px solid" borderColor="yellow.400" />
-                        <Heading size="lg" color={headingColor}>{ranking[0].nome}</Heading>
-                        <Text fontSize="sm" color={textColor} mb={2}>@{ranking[0].email.split('@')[0]}</Text>
+                        <Avatar size="2xl" src={ranking[0].avatar} name={ranking[0].nome || 'Usuário'} mb={4} mt={4} border="4px solid" borderColor="yellow.400" />
+                        <Heading size="lg" color={headingColor} mb={2}>{ranking[0].nome || 'Usuário'}</Heading>
                         <Heading size="xl" bgGradient="linear(to-r, brand.pink, brand.blue)" bgClip="text" mb={3}>{ranking[0].pontuacaoGeral} pts</Heading>
                       </Box>
                     )}
@@ -169,9 +167,8 @@ export default function Quizzes() {
                     {ranking[2] && (
                       <Box bg={bgCard} p={6} borderRadius="2xl" border="1px solid" borderColor={border} w="280px" textAlign="center" position="relative" mt={10}>
                         <Flex position="absolute" top="-20px" left="50%" transform="translateX(-50%)" w="40px" h="40px" bg="orange.400" borderRadius="full" align="center" justify="center" color="white" fontWeight="bold" border="4px solid" borderColor="brand.bg">3</Flex>
-                        <Avatar size="xl" src={ranking[2].avatar} name={ranking[2].nome} mb={4} mt={4} border="4px solid" borderColor="orange.400" />
-                        <Heading size="md" color={headingColor}>{ranking[2].nome}</Heading>
-                        <Text fontSize="xs" color={textColor} mb={2}>@{ranking[2].email.split('@')[0]}</Text>
+                        <Avatar size="xl" src={ranking[2].avatar} name={ranking[2].nome || 'Usuário'} mb={4} mt={4} border="4px solid" borderColor="orange.400" />
+                        <Heading size="md" color={headingColor} mb={2}>{ranking[2].nome || 'Usuário'}</Heading>
                         <Heading size="lg" color="brand.pink" mb={3}>{ranking[2].pontuacaoGeral} pts</Heading>
                       </Box>
                     )}
@@ -192,10 +189,9 @@ export default function Quizzes() {
                         <Flex key={cand.usuarioId} p={4} align="center" borderBottom="1px solid" borderColor={border} _last={{ borderBottom: 'none' }} _hover={{ bg: rankHoverBg }}>
                           <Box flex="1" maxW="80px" textAlign="center" fontWeight="bold" color={textColor}>{index + 4}</Box>
                           <Flex flex="3" align="center" gap={3}>
-                            <Avatar size="sm" src={cand.avatar} name={cand.nome} />
+                            <Avatar size="sm" src={cand.avatar} name={cand.nome || 'Usuário'} />
                             <Box>
-                              <Text fontWeight="600" color={headingColor} fontSize="sm">{cand.nome}</Text>
-                              <Text fontSize="xs" color={textColor}>@{cand.email.split('@')[0]}</Text>
+                              <Text fontWeight="600" color={headingColor} fontSize="sm">{cand.nome || 'Usuário'}</Text>
                             </Box>
                           </Flex>
                           <Box flex="2" textAlign="center" display={{ base: 'none', md: 'block' }} color={textColor} fontSize="sm">{cand.quizzesRealizados}</Box>

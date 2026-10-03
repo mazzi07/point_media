@@ -161,11 +161,10 @@ public class QuizController {
             Map<String, Object> map = new HashMap<>();
             map.put("usuarioId", obj[0]);
             map.put("nome", obj[1]);
-            map.put("email", obj[2]);
-            map.put("avatar", obj[3]);
-            map.put("pontuacaoGeral", obj[4]);
-            map.put("quizzesRealizados", obj[5]);
-            map.put("mediaAcertos", obj[6]);
+            map.put("avatar", obj[2]);
+            map.put("pontuacaoGeral", obj[3]);
+            map.put("quizzesRealizados", obj[4]);
+            map.put("mediaAcertos", obj[5]);
             return map;
         }).collect(Collectors.toList());
         return ResponseEntity.ok(ranking);
