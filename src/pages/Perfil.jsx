@@ -12,7 +12,7 @@ import { useAuth } from '../context/useAuth';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useQuery } from '@tanstack/react-query';
-import html2pdf from 'html2pdf.js';
+import { generateResumePdf } from '../utils/resumePdf';
 import ResumePDFTemplate from '../components/ResumePDFTemplate';
 
 export default function Perfil() {
@@ -83,15 +83,9 @@ export default function Perfil() {
     setIsGeneratingPdf(true);
     setTimeout(() => {
       const element = document.getElementById('perfil-pdf-template');
-      const opt = {
-        margin:       10,
-        filename:     `curriculo_${user?.nome.replace(/\s+/g, '_').toLowerCase()}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      };
+      const filename = `curriculo_${user?.nome.replace(/\s+/g, '_').toLowerCase()}.pdf`;
 
-      html2pdf().set(opt).from(element).save().then(() => {
+      generateResumePdf(element, filename).then(() => {
         setIsGeneratingPdf(false);
       });
     }, 100);

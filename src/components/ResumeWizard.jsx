@@ -15,7 +15,7 @@ import StepExperience from './wizard/StepExperience';
 import StepSkills from './wizard/StepSkills';
 import StepReview from './wizard/StepReview';
 import ResumePDFTemplate from './ResumePDFTemplate';
-import html2pdf from 'html2pdf.js';
+import { generateResumePdf } from '../utils/resumePdf';
 
 export default function ResumeWizard() {
   const [currentStep, setCurrentStep] = useState(0);
@@ -162,15 +162,9 @@ export default function ResumeWizard() {
     setIsGeneratingPdf(true);
     setTimeout(() => {
       const element = document.getElementById('wizard-pdf-template');
-      const opt = {
-        margin:       10,
-        filename:     `curriculo_${user?.nome.replace(/\s+/g, '_').toLowerCase()}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      };
+      const filename = `curriculo_${user?.nome.replace(/\s+/g, '_').toLowerCase()}.pdf`;
 
-      html2pdf().set(opt).from(element).save().then(() => {
+      generateResumePdf(element, filename).then(() => {
         setIsGeneratingPdf(false);
       });
     }, 100);
