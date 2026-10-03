@@ -15,9 +15,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @RestController
 @RequestMapping("/api/curriculo")
 public class CurriculoController {
+
+    private static final Logger logger = LoggerFactory.getLogger(CurriculoController.class);
 
     private final CurriculoRepository curriculoRepository;
     private final UsuarioRepository usuarioRepository;
@@ -85,9 +90,9 @@ public class CurriculoController {
 
             return ResponseEntity.ok(Map.of("success", true, "message", "Currículo salvo com sucesso."));
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Erro ao salvar currículo para usuario: {}", usuario.getEmail(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("success", false, "message", e.getMessage(), "stack", e.toString()));
+                .body(Map.of("success", false, "message", "Ocorreu um erro interno ao salvar o currículo."));
         }
     }
 }

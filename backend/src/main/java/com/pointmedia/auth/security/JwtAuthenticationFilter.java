@@ -43,25 +43,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         }
 
-        System.out.println("DEBUG JWT: Token found = " + (token != null));
+
         if (token == null || !jwtUtil.isTokenValid(token)) {
-            System.out.println("DEBUG JWT: Token is null or invalid");
+
             filterChain.doFilter(request, response);
             return;
         }
 
         String email = jwtUtil.extractEmail(token);
         String tipo = jwtUtil.extractTipo(token);
-        System.out.println("DEBUG JWT: email=" + email + ", tipo=" + tipo);
+
 
         Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
         if (usuarioOpt.isEmpty()) {
-            System.out.println("DEBUG JWT: User not found in DB");
+
             filterChain.doFilter(request, response);
             return;
         }
 
-        System.out.println("DEBUG JWT: Adding authority ROLE_" + tipo);
+
         // Autentica no contexto do Spring Security com a role do usuário
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                 email,
@@ -70,7 +70,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         );
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        System.out.println("DEBUG JWT: Authentication set in context");
+
         filterChain.doFilter(request, response);
     }
 }
