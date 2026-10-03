@@ -33,7 +33,7 @@ public class UsuarioController {
         }
 
         String base64Avatar = body.get("avatar");
-        if (base64Avatar == null || base64Avatar.isEmpty()) {
+        if (base64Avatar == null || base64Avatar.isBlank()) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Avatar não fornecido."));
         }
 

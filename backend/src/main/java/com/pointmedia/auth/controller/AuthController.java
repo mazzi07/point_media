@@ -8,7 +8,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.HttpHeaders;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -145,27 +144,6 @@ public class AuthController {
         return ResponseEntity.ok()
             .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
             .body(response);
-    }
-
-    @PostMapping("/avatar")
-    public ResponseEntity<?> updateAvatar(@RequestBody Map<String, String> request) {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
-        
-        if (usuarioOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        String base64Image = request.get("avatar");
-        if (base64Image == null || base64Image.isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Imagem inválida."));
-        }
-
-        Usuario usuario = usuarioOpt.get();
-        usuario.setAvatar(base64Image);
-        usuarioRepository.save(usuario);
-
-        return ResponseEntity.ok(Map.of("success", true, "message", "Avatar atualizado com sucesso."));
     }
 
     @PostMapping("/logout")

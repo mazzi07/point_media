@@ -73,7 +73,7 @@ export default function Navbar() {
     reader.onload = async (event) => {
       const base64 = event.target.result;
       try {
-        const response = await api.post('/api/auth/avatar', { base64 });
+        const response = await api.post('/api/usuarios/avatar', { avatar: base64 });
         if (response.ok) {
           updateUserField('avatar', base64);
           toast({ title: 'Foto de perfil atualizada!', status: 'success' });
