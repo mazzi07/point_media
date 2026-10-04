@@ -1,8 +1,11 @@
 -- Não remove resultados históricos. Duplicados fazem este primeiro ALTER
 -- falhar com "Duplicate entry" e o nome uk_resultado_usuario_quiz.
--- Para investigar antes de reaplicar a migração:
--- SELECT usuario_id, quiz_id, COUNT(*) FROM resultados_quiz
+-- Preflight do operador: verifique duplicados antes de aplicar V9.
+-- SELECT usuario_id, quiz_id, COUNT(*) AS quantidade FROM resultados_quiz
 -- GROUP BY usuario_id, quiz_id HAVING COUNT(*) > 1;
+-- DDL do MySQL pode manter ALTERs anteriores se uma instrução posterior falhar.
+-- Uma falha parcial pode exigir reconciliação manual do schema e flyway repair
+-- antes de tentar novamente; repair não desfaz alterações no schema.
 ALTER TABLE resultados_quiz
     ADD CONSTRAINT uk_resultado_usuario_quiz UNIQUE (usuario_id, quiz_id);
 

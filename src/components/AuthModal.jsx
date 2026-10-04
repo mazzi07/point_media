@@ -24,7 +24,7 @@ const loginSchema = z.object({
 const registerSchema = z.object({
   nome: z.string().min(3, 'O nome deve ter no mínimo 3 caracteres'),
   email: z.string().min(1, 'O e-mail é obrigatório').email('Formato de e-mail inválido'),
-  profissao: z.string().optional(),
+
   senha: z.string().min(6, 'A senha deve ter no mínimo 6 caracteres'),
   confirmarSenha: z.string().min(1, 'Confirme sua senha'),
   aceitaTermos: z.literal(true, {
@@ -229,16 +229,6 @@ export default function AuthModal() {
                   <FormErrorMessage fontSize="xs">{isLogin ? errorsLogin.email?.message : errorsSignup.email?.message}</FormErrorMessage>
                 </FormControl>
 
-                {!isLogin && (
-                  <FormControl isInvalid={errorsSignup.profissao}>
-                    <Text fontSize="sm" fontWeight="500" color="white" mb={1}>Profissão</Text>
-                    <InputGroup size="lg">
-                      <InputLeftElement pointerEvents="none"><Icon as={FaBriefcase} color="gray.500" fontSize="sm" /></InputLeftElement>
-                      <Input placeholder="Ex: Desenvolvedor Full Stack" bg="rgba(255,255,255,0.02)" border="1px solid" borderColor="whiteAlpha.200" color="white" fontSize="sm" focusBorderColor="brand.pink" {...registerSignup('profissao')} />
-                    </InputGroup>
-                    <FormErrorMessage fontSize="xs">{errorsSignup.profissao?.message}</FormErrorMessage>
-                  </FormControl>
-                )}
 
                 <FormControl isInvalid={isLogin ? errorsLogin.senha : errorsSignup.senha}>
                   <Text fontSize="sm" fontWeight="500" color="white" mb={1}>Senha</Text>

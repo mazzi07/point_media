@@ -31,8 +31,12 @@ export default function Home() {
     if (!isLoggedIn || !userEmail) return;
     let active = true;
     api.get('/api/curriculo')
-      .then((res) => { if (active) setHasResume(res.ok); })
-      .catch(() => { if (active) setHasResume(false); });
+      .then((res) => {
+        if (!active) return;
+        if (res.ok) setHasResume(true);
+        else if (res.status === 404) setHasResume(false);
+      })
+      .catch(() => { /* do not falsely assume no resume on network error */ });
     return () => { active = false; };
   }, [isLoggedIn, userEmail, setHasResume]);
 

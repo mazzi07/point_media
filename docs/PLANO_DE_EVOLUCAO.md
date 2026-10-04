@@ -128,7 +128,7 @@ Usuarios (1) ---- (1) Curriculos (1) ---- (N) Habilidades (ElementCollection)
 ## 8. Plano de banco de dados
 Não são necessárias migrações imediatas para a Fase 1 e 2, pois a estrutura de `candidaturas` (V7) já atende aos requisitos iniciais.
 No futuro, para a **Fase 5 (Chat)**, será necessário criar:
-* `V9__add_chat.sql`: `CREATE TABLE chats (id, candidatura_id)` e `CREATE TABLE mensagens (id, chat_id, remetente_id, texto, data)`.
+* `V10__add_chat.sql`: `CREATE TABLE chats (id, candidatura_id)` e `CREATE TABLE mensagens (id, chat_id, remetente_id, texto, data)`.
 Para a **Fase 6 (Moderação)**:
 * `V10__add_filtros.sql`: Tabela para armazenar lista de palavras censuradas.
 

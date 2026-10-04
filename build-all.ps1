@@ -1,27 +1,44 @@
 $ErrorActionPreference = "Stop"
 
-Write-Host "Building frontend..."
-npm.cmd run build
-
-Write-Host "Wiping old static directory..."
-if (Test-Path "backend\src\main\resources\static") {
-    Remove-Item -Recurse -Force "backend\src\main\resources\static"
-}
-
-Write-Host "Recreating static directory..."
-New-Item -ItemType Directory -Path "backend\src\main\resources\static" | Out-Null
-
-Write-Host "Copying frontend dist to backend static directory..."
-Copy-Item -Path "dist\*" -Destination "backend\src\main\resources\static" -Recurse -Force
-
-Write-Host "Building backend..."
-Set-Location "backend"
+Push-Location -LiteralPath $PSScriptRoot
 try {
-    # Run maven packaging
-    mvn.cmd -DskipTests package
+    Write-Host "Building frontend..."
+    npm.cmd run build
+    if ($LASTEXITCODE -ne 0) {
+        throw "Frontend build failed (exit code $LASTEXITCODE)."
+    }
+
+    $projectRoot = [System.IO.Path]::GetFullPath($PSScriptRoot)
+    $staticPath = [System.IO.Path]::GetFullPath((Join-Path $projectRoot "backend\src\main\resources\static"))
+    if (-not $staticPath.StartsWith($projectRoot.TrimEnd('\') + '\', [System.StringComparison]::OrdinalIgnoreCase)) {
+        throw "Static directory must be inside the project root."
+    }
+
+    Write-Host "Wiping old static directory..."
+    if (Test-Path -LiteralPath $staticPath) {
+        Remove-Item -LiteralPath $staticPath -Recurse -Force
+    }
+
+    Write-Host "Recreating static directory..."
+    New-Item -ItemType Directory -Path $staticPath | Out-Null
+
+    Write-Host "Copying frontend dist to backend static directory..."
+    Copy-Item -Path (Join-Path $projectRoot "dist\*") -Destination $staticPath -Recurse -Force
+
+    Write-Host "Building backend..."
+    Push-Location -LiteralPath (Join-Path $projectRoot "backend")
+    try {
+        mvn.cmd clean -DskipTests package
+        if ($LASTEXITCODE -ne 0) {
+            throw "Backend build failed (exit code $LASTEXITCODE)."
+        }
+    }
+    finally {
+        Pop-Location
+    }
+
+    Write-Host "Build complete!"
 }
 finally {
-    Set-Location ".."
+    Pop-Location
 }
-
-Write-Host "Build complete!"
