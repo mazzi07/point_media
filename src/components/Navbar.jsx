@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import {
-  Box, Flex, Button, useColorModeValue, useColorMode, HStack, Link,
+  Box, Flex, Button, useColorMode, HStack, Link,
   IconButton, Image, Menu, MenuButton, MenuList, MenuItem, Avatar, Text,
   Popover, PopoverTrigger, PopoverContent, PopoverBody, VStack, Badge,
-  Icon, Divider, useToast
+  Icon, Divider, useToast, Container
 } from '@chakra-ui/react';
 import { Link as RouterLink, useNavigate, useLocation } from 'react-router-dom';
 import { FaBell, FaCircle, FaSun, FaMoon, FaBars } from 'react-icons/fa';
@@ -21,22 +21,15 @@ export default function Navbar() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const { isLoggedIn, logout, user, openAuthModal, updateUserField } = useAuth();
 
-  const bg          = useColorModeValue('rgba(255, 255, 255, 0.85)', 'rgba(11, 15, 25, 0.85)');
-  const borderColor = useColorModeValue('transparent', 'whiteAlpha.100');
-  const navShadow   = useColorModeValue('0 4px 30px rgba(0, 0, 0, 0.03)', 'none');
-  const textMuted   = useColorModeValue('gray.500', 'gray.400');
-  const activeColor = useColorModeValue('brand.pink', 'brand.pink');
-  const textStrong  = useColorModeValue('#1B254B', 'white');
-  const hoverBg     = useColorModeValue('gray.50', 'whiteAlpha.200');
-  const cardBg      = useColorModeValue('white', 'brand.cardBg');
-  const notifUnread = useColorModeValue('blue.50', 'whiteAlpha.100');
-  const notifHover  = useColorModeValue('gray.50', 'whiteAlpha.200');
-
-
-  const resumeBtnBg = useColorModeValue('blue.50', 'whiteAlpha.100');
-  const resumeBtnColor = useColorModeValue('brand.blue', 'white');
-  const resumeBtnHover = useColorModeValue('blue.100', 'whiteAlpha.200');
-  const resumeBtnBorder = useColorModeValue('blue.100', 'whiteAlpha.200');
+  const bg = 'surface';
+  const borderColor = 'border';
+  const textMuted = 'textSecondary';
+  const activeColor = 'brandPink';
+  const textStrong = 'textPrimary';
+  const hoverBg = 'hover';
+  const cardBg = 'elevated';
+  const notifUnread = 'active';
+  const notifHover = 'hover';
 
   // notificacoes do usuario
   const userEmail = isLoggedIn ? user?.email : null;
@@ -152,33 +145,35 @@ export default function Navbar() {
   ];
 
   return (
-    <Box bg={bg} px={{ base: 3, md: 8 }} borderBottom="1px solid" borderColor={borderColor} boxShadow={navShadow}
-      backdropFilter="blur(12px)" position="sticky" top={0} zIndex={100} w="100%" transition="all 0.3s">
-      <Flex h={16} alignItems="center" justifyContent="space-between" maxW="7xl" mx="auto">
+    <Box as="header" bg={bg} borderBottom="1px solid" borderColor={borderColor}
+      position="sticky" top={0} zIndex={100} w="100%">
+      <Container>
+      <Flex minH={16} gap={3} alignItems="center" justifyContent="space-between">
 
 
-        <HStack spacing={12} alignItems="center">
-          <HStack spacing={3} cursor="pointer" onClick={() => navigate('/')}>
+        <HStack spacing={{ base: 3, lg: 10 }} alignItems="center" minW={0}>
+          <HStack as={RouterLink} to="/" aria-label="Point Media — início" spacing={2} flexShrink={0}>
             <Image src={pointLogo} alt="Point Media Logo" w="28px" h="28px" objectFit="contain" />
             <Text fontWeight="700" fontSize="md" color={textStrong}
-              display={{ base: 'none', md: 'block' }}>
+              display={{ base: 'none', sm: 'block' }}>
               Point Media
             </Text>
           </HStack>
-          
-          <HStack as="nav" spacing={6} display={{ base: 'none', md: 'flex' }}>
+
+          <HStack as="nav" aria-label="Navegação principal" spacing={6} display={{ base: 'none', lg: 'flex' }}>
             {navLinks.map((item) => {
               const isActive = location.pathname === item.to;
               return (
                 <Link as={RouterLink} to={item.to} key={item.label}
-                  fontSize="sm" fontWeight={isActive ? "600" : "500"} 
+                  aria-current={isActive ? 'page' : undefined}
+                  py={5} fontSize="sm" fontWeight={isActive ? "600" : "500"}
                   color={isActive ? textStrong : textMuted}
                   position="relative"
                   _hover={{ textDecoration: 'none', color: textStrong }}
-                  transition="all 0.2s">
+                  transition="color 180ms">
                   {item.label}
                   {isActive && (
-                    <Box position="absolute" bottom="-18px" left="0" w="100%" h="2px" bg={activeColor} />
+                    <Box position="absolute" bottom="0" left="0" w="100%" h="2px" bg={activeColor} />
                   )}
                 </Link>
               )
@@ -188,8 +183,8 @@ export default function Navbar() {
 
 
         <HStack spacing={{ base: 1, md: 4 }}>
-          <Box display={{ base: 'block', md: 'none' }}>
-            <Menu>
+          <Box display={{ base: 'block', lg: 'none' }}>
+            <Menu placement="bottom-end">
               <MenuButton as={IconButton} aria-label="Abrir navegação" icon={<FaBars />} size="sm" variant="ghost" />
               <MenuList bg={cardBg} borderColor={borderColor}>
                 {navLinks.map(item => (
@@ -202,17 +197,17 @@ export default function Navbar() {
             </Menu>
           </Box>
           <IconButton aria-label="Alternar tema"
-            icon={colorMode === 'light' ? <FaMoon size={14} /> : <FaSun size={14} color="#FBBF24" />}
-            onClick={toggleColorMode} variant="ghost" size="sm" isRound 
+            icon={colorMode === 'light' ? <FaMoon size={14} /> : <FaSun size={14} />}
+            onClick={toggleColorMode} variant="ghost" size="sm"
             _hover={{ bg: hoverBg }} />
 
           {!isLoggedIn ? (
             <>
-              <Button variant="ghost" color={activeColor} fontSize="sm" fontWeight="500" 
+              <Button variant="ghost" color={textStrong} fontSize="sm" fontWeight="500"
                 onClick={() => openAuthModal('login')}>
                 Entrar
               </Button>
-              <Button onClick={() => openAuthModal('register')} size="sm" variant="gradient" px={{ base: 3, md: 6 }} py={4}>
+              <Button onClick={() => openAuthModal('register')} size="sm" variant="primary" px={{ base: 3, md: 4 }}>
                 Cadastrar
               </Button>
             </>
@@ -242,7 +237,7 @@ export default function Navbar() {
                 </PopoverTrigger>
                 <PopoverContent w="320px" maxW="calc(100vw - 24px)" shadow="lg" border="1px solid"
                   borderColor={borderColor}
-                  bg={bg}>
+                  bg="elevated">
                   <PopoverBody p={0}>
                     <Box px={4} py={3} borderBottom="1px solid" borderColor={borderColor}>
                       <Text fontSize="sm" fontWeight="600"
@@ -291,26 +286,31 @@ export default function Navbar() {
 
               {user?.tipo !== 'ADMIN' && (
                 <Button as={RouterLink} to="/criar-perfil" size="sm"
-                  bg={resumeBtnBg}
-                  color={resumeBtnColor}
-                  fontWeight="600"
-                  border="1px solid" borderColor={resumeBtnBorder}
-                  _hover={{ bg: resumeBtnHover, transform: 'translateY(-1px)' }}
-                  display={{ base: 'none', md: 'flex' }}
-                  borderRadius="full"
-                  px={6}>
+                  variant="secondary"
+                  display={{ base: 'none', lg: 'flex' }} px={4}>
                   Meu Currículo
+                </Button>
+              )}
+
+              {user?.tipo === 'ADMIN' && (
+                <Button as={RouterLink} to="/admin" size="sm" variant="secondary"
+                  aria-current={location.pathname === '/admin' ? 'page' : undefined}>
+                  Admin
                 </Button>
               )}
 
               {/* menu do usuario */}
               <input type="file" accept={AVATAR_ACCEPT} disabled={uploadingAvatar} ref={fileInputRef} style={{ display: 'none' }} onChange={handleAvatarChange} />
-              <Menu>
-                <MenuButton>
+              <Menu placement="bottom-end">
+                <MenuButton aria-label="Menu da conta" borderRadius="control" p={1}>
                   <Avatar size="sm" src={user?.avatar} name={user?.nome || 'Usuário'} bg="brand.blue"
                     color="white" cursor="pointer" />
                 </MenuButton>
                 <MenuList fontSize="sm" bg={cardBg} borderColor={borderColor}>
+                  <Box px={3} py={2} borderBottom="1px solid" borderColor={borderColor} mb={1}>
+                    <Text fontWeight="600" noOfLines={1} maxW="220px">{user?.nome || 'Usuário'}</Text>
+                    <Text fontSize="xs" color="textSecondary">{user?.tipo === 'ADMIN' ? 'Administração' : 'Candidato'}</Text>
+                  </Box>
                   <MenuItem bg={cardBg} _hover={{ bg: hoverBg }} onClick={() => fileInputRef.current.click()}>Alterar Foto de Perfil</MenuItem>
                   {user?.tipo !== 'ADMIN' && (
                     <>
@@ -328,6 +328,7 @@ export default function Navbar() {
           )}
         </HStack>
       </Flex>
+      </Container>
     </Box>
   );
 }

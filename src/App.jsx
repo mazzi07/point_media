@@ -41,7 +41,7 @@ function App() {
         <AuthProvider>
         <Box display="flex" flexDirection="column" minHeight="100vh">
           <Navbar />
-          <Box flex="1">
+          <Box as="main" flex="1" minW={0}>
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/sobre"     element={<Sobre />} />
