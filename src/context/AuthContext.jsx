@@ -68,11 +68,15 @@ export function AuthProvider({ children }) {
   }, [logout]);
 
   const updateUserField = (field, value) => {
-    setUser(prev => {
-      const updated = { ...prev, [field]: value };
+    const updated = { ...user, [field]: value };
+    setUser(prev => ({ ...prev, [field]: value }));
+    try {
       localStorage.setItem(USER_KEY, JSON.stringify(updated));
-      return updated;
-    });
+      return true;
+    } catch {
+      // A foto já foi salva no servidor; uma falha de armazenamento não desfaz o preview.
+      return false;
+    }
   };
 
   return (

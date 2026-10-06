@@ -35,26 +35,37 @@ export default function ResumeWizard() {
   const [skillInput, setSkillInput] = useState('');
 
   const [loadingData, setLoadingData] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [saving, setSaving] = useState(false);
 
 
   useEffect(() => {
+    let active = true;
     api.get('/api/curriculo')
       .then(async (res) => {
-        if (res.ok) {
-          const data = await res.json();
-          setCurriculo({
-            cargo: data.cargo || '',
-            experiencia: data.experiencia || '',
-            linkedin: data.linkedin || '',
-            github: data.github || '',
-          });
-          setHabilidades(data.habilidades || []);
-        }
+        if (res.status === 404) return;
+        if (!res.ok) throw new Error('Falha ao carregar currículo');
+        const data = await res.json();
+        if (!active) return;
+        setCurriculo({
+          cargo: data.cargo || '',
+          experiencia: data.experiencia || '',
+          linkedin: data.linkedin || '',
+          github: data.github || '',
+        });
+        setHabilidades(data.habilidades || []);
       })
-      .catch(() => {})
-      .finally(() => setLoadingData(false));
-  }, []);
+      .catch(() => { if (active) setLoadError(true); })
+      .finally(() => { if (active) setLoadingData(false); });
+    return () => { active = false; };
+  }, [loadAttempt]);
+
+  const retryLoad = () => {
+    setLoadError(false);
+    setLoadingData(true);
+    setLoadAttempt(prev => prev + 1);
+  };
 
   const handleChange = (field) => (e) =>
     setCurriculo((prev) => ({ ...prev, [field]: e.target.value }));
@@ -117,6 +128,7 @@ export default function ResumeWizard() {
   };
 
   const handleSave = async () => {
+    if (loadingData || loadError) return;
     setSaving(true);
     try {
       const response = await api.post('/api/curriculo', {
@@ -156,13 +168,17 @@ export default function ResumeWizard() {
 
   const handleDownloadPDF = () => {
     setIsGeneratingPdf(true);
-    setTimeout(() => {
-      const element = document.getElementById('wizard-pdf-template');
-      const filename = `curriculo_${user?.nome.replace(/\s+/g, '_').toLowerCase()}.pdf`;
-
-      generateResumePdf(element, filename).then(() => {
+    setTimeout(async () => {
+      try {
+        const element = document.getElementById('wizard-pdf-template');
+        if (!element) throw new Error('Modelo de PDF indisponível');
+        const filename = `curriculo_${user?.nome.replace(/\s+/g, '_').toLowerCase()}.pdf`;
+        await generateResumePdf(element, filename);
+      } catch {
+        toast({ title: 'Não foi possível gerar o PDF.', description: 'Tente novamente.', status: 'error', isClosable: true });
+      } finally {
         setIsGeneratingPdf(false);
-      });
+      }
     }, 100);
   };
 
@@ -175,6 +191,15 @@ export default function ResumeWizard() {
   const inactiveStepColor = useColorModeValue('gray.400', 'gray.500');
   const activeStepLabelColor = useColorModeValue('gray.800', 'white');
   const dialogTextColor = useColorModeValue('gray.600', 'gray.300');
+
+  if (loadError) {
+    return (
+      <Flex minH="60vh" align="center" justify="center" direction="column" gap={4}>
+        <Text>Não foi possível carregar seu currículo. Seus dados não foram alterados.</Text>
+        <Button onClick={retryLoad}>Tentar novamente</Button>
+      </Flex>
+    );
+  }
 
   if (loadingData) {
     return (

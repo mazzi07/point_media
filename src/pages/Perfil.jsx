@@ -2,7 +2,7 @@ import React from 'react';
 import {
   Box, Container, Heading, Text, Flex, HStack, VStack, Tag, TagLabel,
   Avatar, Icon, Button, Divider, SimpleGrid, Badge,
-  useColorModeValue, CircularProgress, Spinner
+  useColorModeValue, CircularProgress, Spinner, useToast
 } from '@chakra-ui/react';
 import {
   FaBriefcase, FaLinkedin, FaGithub, FaEdit, FaTrophy, FaCheckCircle,
@@ -18,6 +18,7 @@ import ResumePDFTemplate from '../components/ResumePDFTemplate';
 export default function Perfil() {
   const { isLoggedIn, user } = useAuth();
   const navigate = useNavigate();
+  const toast = useToast();
   const [isGeneratingPdf, setIsGeneratingPdf] = React.useState(false);
 
   const bgCard = useColorModeValue('white', 'brand.cardBg');
@@ -81,13 +82,17 @@ export default function Perfil() {
 
   const handleDownloadPDF = () => {
     setIsGeneratingPdf(true);
-    setTimeout(() => {
-      const element = document.getElementById('perfil-pdf-template');
-      const filename = `curriculo_${user?.nome.replace(/\s+/g, '_').toLowerCase()}.pdf`;
-
-      generateResumePdf(element, filename).then(() => {
+    setTimeout(async () => {
+      try {
+        const element = document.getElementById('perfil-pdf-template');
+        if (!element) throw new Error('Modelo de PDF indisponível');
+        const filename = `curriculo_${user?.nome.replace(/\s+/g, '_').toLowerCase()}.pdf`;
+        await generateResumePdf(element, filename);
+      } catch {
+        toast({ title: 'Não foi possível gerar o PDF.', description: 'Tente novamente.', status: 'error', isClosable: true });
+      } finally {
         setIsGeneratingPdf(false);
-      });
+      }
     }, 100);
   };
 

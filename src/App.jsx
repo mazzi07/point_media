@@ -48,7 +48,7 @@ function App() {
               <Route path="/sobre"     element={<Sobre />} />
               <Route path="/vagas"     element={<Vagas />} />
               <Route path="/quizzes" element={<Quizzes />} />
-              <Route path="/quizzes/:id" element={<QuizTest />} />
+              <Route path="/quizzes/:id" element={<PrivateRoute><QuizTest /></PrivateRoute>} />
               <Route path="/criar-perfil" element={
                 <PrivateRoute><ResumeWizard /></PrivateRoute>
               } />

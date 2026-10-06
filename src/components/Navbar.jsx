@@ -10,6 +10,7 @@ import { FaBell, FaCircle, FaSun, FaMoon } from 'react-icons/fa';
 import pointLogo from '../assets/point.png';
 import { useAuth } from '../context/useAuth';
 import { api } from '../services/api';
+import { AVATAR_ACCEPT, validateAvatarFile } from '../utils/avatar';
 
 export default function Navbar() {
   const { colorMode, toggleColorMode } = useColorMode();
@@ -17,6 +18,7 @@ export default function Navbar() {
   const location = useLocation();
   const toast = useToast();
   const fileInputRef = useRef(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const { isLoggedIn, logout, user, openAuthModal, updateUserField } = useAuth();
 
   const bg          = useColorModeValue('rgba(255, 255, 255, 0.85)', 'rgba(11, 15, 25, 0.85)');
@@ -79,29 +81,45 @@ export default function Navbar() {
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
+    e.target.value = '';
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-      toast({ title: 'Apenas imagens são permitidas.', status: 'error' });
+    const error = validateAvatarFile(file);
+    if (error) {
+      toast({ title: error, status: 'warning' });
       return;
     }
 
+    setUploadingAvatar(true);
     const reader = new FileReader();
     reader.onload = async (event) => {
       const base64 = event.target.result;
       try {
         const response = await api.post('/api/usuarios/avatar', { avatar: base64 });
         if (response.ok) {
-          updateUserField('avatar', base64);
-          toast({ title: 'Foto de perfil atualizada!', status: 'success' });
+          const stored = updateUserField('avatar', base64);
+          toast({ title: 'Foto de perfil atualizada!', status: stored ? 'success' : 'warning',
+            description: stored ? undefined : 'Foto salva no servidor, mas não foi possível atualizar o armazenamento deste navegador.' });
         } else {
           toast({ title: 'Erro ao atualizar foto.', status: 'error' });
         }
       } catch {
         toast({ title: 'Erro de conexão.', status: 'error' });
+      } finally {
+        setUploadingAvatar(false);
       }
     };
-    reader.readAsDataURL(file);
+    const handleReadError = () => {
+      setUploadingAvatar(false);
+      toast({ title: 'Não foi possível ler a imagem. Tente novamente.', status: 'error' });
+    };
+    reader.onerror = handleReadError;
+    reader.onabort = handleReadError;
+    try {
+      reader.readAsDataURL(file);
+    } catch {
+      handleReadError();
+    }
   };
 
   const marcarLida = async (id) => {
@@ -263,7 +281,7 @@ export default function Navbar() {
               )}
 
               {/* menu do usuario */}
-              <input type="file" accept="image/*" ref={fileInputRef} style={{ display: 'none' }} onChange={handleAvatarChange} />
+              <input type="file" accept={AVATAR_ACCEPT} disabled={uploadingAvatar} ref={fileInputRef} style={{ display: 'none' }} onChange={handleAvatarChange} />
               <Menu>
                 <MenuButton>
                   <Avatar size="sm" src={user?.avatar} name={user?.nome || 'Usuário'} bg="brand.blue"

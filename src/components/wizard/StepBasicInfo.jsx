@@ -3,6 +3,7 @@ import { VStack, Heading, Box, Text, Input, useColorModeValue, Image, useToast, 
 import { FaCloudUploadAlt } from 'react-icons/fa';
 import { useAuth } from '../../context/useAuth';
 import { api } from '../../services/api';
+import { AVATAR_ACCEPT, validateAvatarFile } from '../../utils/avatar';
 
 export default function StepBasicInfo({ user, curriculo, handleChange }) {
   const { updateUserField } = useAuth();
@@ -17,27 +18,25 @@ export default function StepBasicInfo({ user, curriculo, handleChange }) {
   const uploadTextColor = useColorModeValue('gray.600', 'gray.300');
 
   const processFile = (file) => {
-    if (!file) return;
-    if (!file.type.startsWith('image/')) {
-      toast({ title: 'Apenas imagens são aceitas.', status: 'warning', duration: 3000, position: 'top' });
-      return;
-    }
-    if (file.size > 1024 * 1024) {
-      toast({ title: 'A imagem deve ter no máximo 1MB.', status: 'warning', duration: 3000, position: 'top' });
+    if (!file || uploading) return;
+    const error = validateAvatarFile(file);
+    if (error) {
+      toast({ title: error, status: 'warning', duration: 3000, position: 'top' });
       return;
     }
 
     setUploading(true);
     const reader = new FileReader();
-    reader.onloadend = async () => {
+    reader.onload = async () => {
       const base64 = reader.result;
       try {
         const response = await api.post('/api/usuarios/avatar', { avatar: base64 });
         const data = await response.json();
         
         if (response.ok && data.success) {
-          updateUserField('avatar', base64);
-          toast({ title: 'Foto de perfil atualizada!', status: 'success', duration: 2000, position: 'top' });
+          const stored = updateUserField('avatar', base64);
+          toast({ title: 'Foto de perfil atualizada!', status: stored ? 'success' : 'warning', duration: 4000, position: 'top',
+            description: stored ? undefined : 'Foto salva no servidor, mas não foi possível atualizar o armazenamento deste navegador.' });
         } else {
           toast({ title: 'Erro ao salvar foto.', description: data.message, status: 'error', duration: 3000, position: 'top' });
         }
@@ -47,11 +46,22 @@ export default function StepBasicInfo({ user, curriculo, handleChange }) {
         setUploading(false);
       }
     };
-    reader.readAsDataURL(file);
+    const handleReadError = () => {
+      setUploading(false);
+      toast({ title: 'Não foi possível ler a imagem. Tente novamente.', status: 'error', duration: 3000, position: 'top' });
+    };
+    reader.onerror = handleReadError;
+    reader.onabort = handleReadError;
+    try {
+      reader.readAsDataURL(file);
+    } catch {
+      handleReadError();
+    }
   };
 
   const handleFileChange = (e) => {
     processFile(e.target.files[0]);
+    e.target.value = '';
   };
 
   const handleDragOver = (e) => {
@@ -112,11 +122,11 @@ export default function StepBasicInfo({ user, curriculo, handleChange }) {
             <Text fontSize="sm" fontWeight="500" color={uploadTextColor} mb={1}>
               Foto de Perfil
             </Text>
-            <Text fontSize="xs" color="gray.400">Arraste ou clique para enviar (máx 1MB)</Text>
+            <Text fontSize="xs" color="gray.400">Arraste ou clique para enviar (JPEG/PNG, máx 1 MiB)</Text>
           </Box>
         )}
         
-        <Input type="file" accept="image/*" opacity={0} position="absolute" h="full" w="full" left={0} top={0} cursor="pointer" onChange={handleFileChange} disabled={uploading} />
+        <Input type="file" accept={AVATAR_ACCEPT} opacity={0} position="absolute" h="full" w="full" left={0} top={0} cursor="pointer" onChange={handleFileChange} disabled={uploading} />
       </Box>
 
       <Input
