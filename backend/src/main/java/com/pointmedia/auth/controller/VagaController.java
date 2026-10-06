@@ -13,6 +13,10 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.dao.DataAccessException;
+import org.hibernate.exception.ConstraintViolationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.List;
@@ -24,6 +28,8 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/vagas")
 @Transactional
 public class VagaController {
+
+    private static final Logger logger = LoggerFactory.getLogger(VagaController.class);
 
     private final VagaRepository vagaRepository;
     private final CandidaturaRepository candidaturaRepository;
@@ -73,9 +79,28 @@ public class VagaController {
         }
 
         Candidatura candidatura = new Candidatura(usuario, vaga);
-        candidaturaRepository.save(candidatura);
+        // O UNIQUE continua necessário: duas requisições podem passar pelo pre-check.
+        candidaturaRepository.saveAndFlush(candidatura);
 
         return ResponseEntity.ok(Map.of("success", true, "message", "Candidatura realizada com sucesso."));
+    }
+
+    // O MVC trata a violação depois que a transação da candidatura foi revertida.
+    @ExceptionHandler(DataAccessException.class)
+    public ResponseEntity<?> handleErroPersistencia(DataAccessException exception) {
+        for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
+            if (cause instanceof ConstraintViolationException violation) {
+                String constraint = violation.getConstraintName();
+                if (constraint != null && (constraint.equals("uk_candidatura_usuario_vaga")
+                        || constraint.endsWith(".uk_candidatura_usuario_vaga"))) {
+                    return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                            "success", false, "message", "Você já se candidatou para esta vaga."));
+                }
+            }
+        }
+        logger.error("Erro de persistência da candidatura", exception);
+        return ResponseEntity.internalServerError().body(Map.of(
+                "success", false, "message", "Erro ao registrar candidatura."));
     }
 
     @GetMapping("/minhas-candidaturas")

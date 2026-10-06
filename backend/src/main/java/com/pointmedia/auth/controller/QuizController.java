@@ -5,7 +5,9 @@ import com.pointmedia.auth.repository.QuizRepository;
 import com.pointmedia.auth.repository.ResultadoQuizRepository;
 import com.pointmedia.auth.repository.UsuarioRepository;
 import org.hibernate.exception.ConstraintViolationException;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DataAccessException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,6 +27,8 @@ import org.springframework.transaction.annotation.Transactional;
 @RequestMapping("/api/quizzes")
 @Transactional
 public class QuizController {
+
+    private static final Logger logger = LoggerFactory.getLogger(QuizController.class);
 
     private final QuizRepository quizRepository;
     private final ResultadoQuizRepository resultadoQuizRepository;
@@ -131,17 +135,34 @@ public class QuizController {
         }
 
 
-        @SuppressWarnings("unchecked")
-        Map<String, Object> respostas = (Map<String, Object>) body.get("respostas");
-        Integer tempoGasto = (Integer) body.get("tempoGasto");
+        if (!(body.get("respostas") instanceof Map<?, ?> respostasRecebidas)) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Respostas devem ser um objeto de pergunta e alternativa."));
+        }
+        Object tempoRecebido = body.get("tempoGasto");
+        if (tempoRecebido != null && (!(tempoRecebido instanceof Integer tempo) || tempo < 0)) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "tempoGasto deve ser um inteiro não negativo."));
+        }
+        Integer tempoGasto = (Integer) tempoRecebido;
+        Map<String, Long> respostas = new HashMap<>();
+        for (Map.Entry<?, ?> resposta : respostasRecebidas.entrySet()) {
+            Long alternativaId = lerAlternativaId(resposta.getValue());
+            Pergunta pergunta = quiz.getPerguntas().stream()
+                    .filter(p -> String.valueOf(p.getId()).equals(resposta.getKey()))
+                    .findFirst().orElse(null);
+            // Uma alternativa válida de outra pergunta não pode contar como resposta desta.
+            if (pergunta == null || alternativaId == null || pergunta.getAlternativas().stream()
+                    .noneMatch(a -> a.getId().equals(alternativaId))) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Resposta inválida para a pergunta informada."));
+            }
+            respostas.put(String.valueOf(pergunta.getId()), alternativaId);
+        }
 
         int acertos = 0;
         int totalPerguntas = quiz.getPerguntas().size();
 
         for (Pergunta p : quiz.getPerguntas()) {
-            Object altIdObj = respostas.get(String.valueOf(p.getId()));
-            if (altIdObj != null) {
-                Long altEscolhida = Long.valueOf(altIdObj.toString());
+            Long altEscolhida = respostas.get(String.valueOf(p.getId()));
+            if (altEscolhida != null) {
                 boolean acertou = p.getAlternativas().stream()
                         .anyMatch(a -> a.getId().equals(altEscolhida) && a.getCorreta());
                 if (acertou) acertos++;
@@ -162,9 +183,19 @@ public class QuizController {
         ));
     }
 
+    private Long lerAlternativaId(Object valor) {
+        if (!(valor instanceof Integer) && !(valor instanceof Long) && !(valor instanceof String)) return null;
+        try {
+            long id = Long.parseLong(valor.toString());
+            return id > 0 ? id : null;
+        } catch (NumberFormatException exception) {
+            return null;
+        }
+    }
+
     // A transação do envio já foi revertida quando o MVC trata a exceção.
-    @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<?> handleResultadoDuplicado(DataIntegrityViolationException exception) {
+    @ExceptionHandler(DataAccessException.class)
+    public ResponseEntity<?> handleErroPersistencia(DataAccessException exception) {
         for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
             if (cause instanceof ConstraintViolationException violation) {
                 String constraint = violation.getConstraintName();
@@ -175,7 +206,9 @@ public class QuizController {
                 }
             }
         }
-        throw exception;
+        logger.error("Erro de persistência do resultado do quiz", exception);
+        return ResponseEntity.internalServerError().body(Map.of(
+                "success", false, "message", "Erro ao salvar resultado do quiz."));
     }
 
     @GetMapping("/ranking")
