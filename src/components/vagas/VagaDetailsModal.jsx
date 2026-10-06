@@ -9,7 +9,7 @@ const getTypeColor = (tipo) => {
   return 'orange';
 };
 
-export default function VagaDetailsModal({ isOpen, onClose, vaga, isApplied, isApplying, onApply }) {
+export default function VagaDetailsModal({ isOpen, onClose, vaga, isApplied, isApplying, applicationStatusUnavailable, onApply }) {
   const bgCard = useColorModeValue('brand.lightCardBg', 'brand.cardBg');
   const border = useColorModeValue('transparent', 'whiteAlpha.100');
   const headingColor = useColorModeValue('#1B254B', 'white');
@@ -60,7 +60,9 @@ export default function VagaDetailsModal({ isOpen, onClose, vaga, isApplied, isA
           <Button variant="outline" mr={3} onClick={onClose} borderColor={border} color={textColor} _hover={{ bg: closeBtnHoverBg }}>
             Fechar
           </Button>
-          {isApplied ? (
+          {applicationStatusUnavailable ? (
+            <Button flex="1" isDisabled>Candidaturas indisponíveis</Button>
+          ) : isApplied ? (
             <Button colorScheme="green" flex="1" isDisabled>
               Já Candidatado
             </Button>

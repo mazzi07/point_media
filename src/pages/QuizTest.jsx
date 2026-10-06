@@ -160,7 +160,7 @@ export default function QuizTest() {
           </Flex>
 
           <Button variant="gradient" size="lg" px={10} onClick={() => navigate('/quizzes')}>
-            Voltar para o Ranking
+            Voltar para Quizzes
           </Button>
         </Box>
       </Container>

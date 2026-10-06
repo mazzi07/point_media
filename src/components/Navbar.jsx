@@ -6,7 +6,7 @@ import {
   Icon, Divider, useToast
 } from '@chakra-ui/react';
 import { Link as RouterLink, useNavigate, useLocation } from 'react-router-dom';
-import { FaBell, FaCircle, FaSun, FaMoon } from 'react-icons/fa';
+import { FaBell, FaCircle, FaSun, FaMoon, FaBars } from 'react-icons/fa';
 import pointLogo from '../assets/point.png';
 import { useAuth } from '../context/useAuth';
 import { api } from '../services/api';
@@ -55,7 +55,7 @@ export default function Navbar() {
   // busca notificacoes ao logar e atualiza a cada 30s
   useEffect(() => {
     if (!isLoggedIn || !userEmail) return;
-    const scope = { active: true };
+    const scope = { active: true, reading: new Set(), readIds: new Set() };
     notificationScope.current = scope;
     const fetchNotificacoes = () => {
       api.get('/api/notificacoes')
@@ -63,8 +63,9 @@ export default function Navbar() {
           if (res.ok) {
             const data = await res.json();
             if (scope.active) {
+              const current = data.map(n => scope.readIds.has(n.id) ? { ...n, lida: true } : n);
               setNotificationState({
-                userEmail, notificacoes: data, naoLidas: data.filter((n) => !n.lida).length
+                userEmail, notificacoes: current, naoLidas: current.filter((n) => !n.lida).length
               });
             }
           }
@@ -124,14 +125,23 @@ export default function Navbar() {
 
   const marcarLida = async (id) => {
     const scope = notificationScope.current;
-    if (!scope?.active) return;
-    await api.put(`/api/notificacoes/${id}/ler`);
-    if (!scope.active) return;
-    setNotificationState((prev) => ({
-      ...prev,
-      notificacoes: prev.notificacoes.map((n) => (n.id === id ? { ...n, lida: true } : n)),
-      naoLidas: Math.max(0, prev.naoLidas - 1)
-    }));
+    if (!scope?.active || scope.reading.has(id) || scope.readIds.has(id)) return;
+    scope.reading.add(id);
+    try {
+      const res = await api.put(`/api/notificacoes/${id}/ler`);
+      if (!scope.active) return;
+      if (!res.ok) throw new Error('Falha ao marcar notificação');
+      scope.readIds.add(id);
+      setNotificationState((prev) => {
+        if (prev.userEmail !== userEmail) return prev;
+        const updated = prev.notificacoes.map(n => n.id === id ? { ...n, lida: true } : n);
+        return { ...prev, notificacoes: updated, naoLidas: updated.filter(n => !n.lida).length };
+      });
+    } catch {
+      if (scope.active) toast({ title: 'Não foi possível marcar a notificação como lida.', status: 'error' });
+    } finally {
+      scope.reading.delete(id);
+    }
   };
 
   const navLinks = [
@@ -142,7 +152,7 @@ export default function Navbar() {
   ];
 
   return (
-    <Box bg={bg} px={8} borderBottom="1px solid" borderColor={borderColor} boxShadow={navShadow}
+    <Box bg={bg} px={{ base: 3, md: 8 }} borderBottom="1px solid" borderColor={borderColor} boxShadow={navShadow}
       backdropFilter="blur(12px)" position="sticky" top={0} zIndex={100} w="100%" transition="all 0.3s">
       <Flex h={16} alignItems="center" justifyContent="space-between" maxW="7xl" mx="auto">
 
@@ -177,7 +187,20 @@ export default function Navbar() {
         </HStack>
 
 
-        <HStack spacing={4}>
+        <HStack spacing={{ base: 1, md: 4 }}>
+          <Box display={{ base: 'block', md: 'none' }}>
+            <Menu>
+              <MenuButton as={IconButton} aria-label="Abrir navegação" icon={<FaBars />} size="sm" variant="ghost" />
+              <MenuList bg={cardBg} borderColor={borderColor}>
+                {navLinks.map(item => (
+                  <MenuItem as={RouterLink} to={item.to} key={item.to} bg={cardBg}
+                    aria-current={location.pathname === item.to ? 'page' : undefined}>
+                    {item.label}
+                  </MenuItem>
+                ))}
+              </MenuList>
+            </Menu>
+          </Box>
           <IconButton aria-label="Alternar tema"
             icon={colorMode === 'light' ? <FaMoon size={14} /> : <FaSun size={14} color="#FBBF24" />}
             onClick={toggleColorMode} variant="ghost" size="sm" isRound 
@@ -189,7 +212,7 @@ export default function Navbar() {
                 onClick={() => openAuthModal('login')}>
                 Entrar
               </Button>
-              <Button onClick={() => openAuthModal('register')} size="sm" variant="gradient" px={6} py={4}>
+              <Button onClick={() => openAuthModal('register')} size="sm" variant="gradient" px={{ base: 3, md: 6 }} py={4}>
                 Cadastrar
               </Button>
             </>
@@ -217,7 +240,7 @@ export default function Navbar() {
                     )}
                   </Box>
                 </PopoverTrigger>
-                <PopoverContent w="320px" shadow="lg" border="1px solid"
+                <PopoverContent w="320px" maxW="calc(100vw - 24px)" shadow="lg" border="1px solid"
                   borderColor={borderColor}
                   bg={bg}>
                   <PopoverBody p={0}>
@@ -233,7 +256,7 @@ export default function Navbar() {
                           <Text fontSize="sm" color={textMuted}>Nenhuma notificação.</Text>
                         </Box>
                       ) : (
-                        notificacoes.slice(0, 10).map((n, idx) => (
+                        notificacoes.map((n, idx) => (
                           <Box key={n.id}>
                             <Box
                               px={4} py={3} cursor={!n.lida ? 'pointer' : 'default'}

@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import {
   Box, Heading, Text, SimpleGrid, Button, useColorModeValue,
-  Container, VStack, HStack, Icon, Flex, Avatar, Tag, Grid, CircularProgress, CircularProgressLabel, Badge
+  Container, VStack, HStack, Icon, Flex, Tag, Grid, CircularProgress, CircularProgressLabel, Badge
 } from '@chakra-ui/react';
 import { useAuth } from '../context/useAuth';
 import { useNavigate, Navigate } from 'react-router-dom';
@@ -25,6 +25,18 @@ export default function Home() {
   const hoverShadow = useColorModeValue('0 12px 35px rgba(0,0,0,0.07)', '0 0 20px rgba(59, 130, 246, 0.15)');
   const iconBg = useColorModeValue('gray.50', 'whiteAlpha.50');
   const iconColor = useColorModeValue('gray.400', 'gray.500');
+  const loginColor = useColorModeValue('gray.700', 'white');
+  const loginBorder = useColorModeValue('gray.300', 'whiteAlpha.400');
+  const loginHoverBg = useColorModeValue('gray.100', 'whiteAlpha.100');
+  const [resumeLoadState, setResumeLoadState] = React.useState({ userEmail, status: 'loading' });
+  const [resumeLoadAttempt, setResumeLoadAttempt] = React.useState(0);
+  if (resumeLoadState.userEmail !== userEmail) {
+    setResumeLoadState({ userEmail, status: 'loading' });
+  }
+  const retryResume = () => {
+    setResumeLoadState({ userEmail, status: 'loading' });
+    setResumeLoadAttempt(previous => previous + 1);
+  };
 
   // checa se o usuario ja tem curriculo
   useEffect(() => {
@@ -33,38 +45,39 @@ export default function Home() {
     api.get('/api/curriculo')
       .then((res) => {
         if (!active) return;
-        if (res.ok) setHasResume(true);
-        else if (res.status === 404) setHasResume(false);
+        if (!res.ok && res.status !== 404) throw new Error('Falha ao carregar currículo');
+        setHasResume(res.ok);
+        setResumeLoadState({ userEmail, status: 'ready' });
       })
-      .catch(() => { /* do not falsely assume no resume on network error */ });
+      .catch(() => { if (active) setResumeLoadState({ userEmail, status: 'error' }); });
     return () => { active = false; };
-  }, [isLoggedIn, userEmail, setHasResume]);
+  }, [isLoggedIn, userEmail, setHasResume, resumeLoadAttempt]);
 
-  const { data: badges = [], isLoading: isLoadingBadges } = useQuery({
+  const { data: badges = [], isLoading: isLoadingBadges, isError: badgesError, refetch: retryBadges } = useQuery({
     queryKey: ['meus-badges'],
     queryFn: async () => {
       const res = await api.get('/api/quizzes/meus-badges');
-      if (!res.ok) return [];
+      if (!res.ok) throw new Error('Falha ao carregar dados');
       return res.json();
     },
     enabled: isLoggedIn && user?.tipo !== 'ADMIN',
   });
 
-  const { data: quizzes = [], isLoading: isLoadingQuizzes } = useQuery({
+  const { data: quizzes = [], isLoading: isLoadingQuizzes, isError: quizzesError, refetch: retryQuizzes } = useQuery({
     queryKey: ['quizzes-disponiveis'],
     queryFn: async () => {
       const res = await api.get('/api/quizzes');
-      if (!res.ok) return [];
+      if (!res.ok) throw new Error('Falha ao carregar dados');
       return res.json();
     },
     enabled: isLoggedIn && user?.tipo !== 'ADMIN',
   });
 
-  const { data: candidaturas = [], isLoading: isLoadingCandidaturas } = useQuery({
+  const { data: candidaturas = [], isLoading: isLoadingCandidaturas, isError: candidaturasError, refetch: retryCandidaturas } = useQuery({
     queryKey: ['minhas-candidaturas'],
     queryFn: async () => {
       const res = await api.get('/api/vagas/minhas-candidaturas');
-      if (!res.ok) return [];
+      if (!res.ok) throw new Error('Falha ao carregar dados');
       return res.json();
     },
     enabled: isLoggedIn && user?.tipo !== 'ADMIN',
@@ -74,6 +87,20 @@ export default function Home() {
   if (isLoggedIn) {
     if (user?.tipo === 'ADMIN') {
       return <Navigate to="/admin" replace />;
+    }
+
+    let resumeTitle = hasResume ? 'Currículo ativo' : 'Currículo pendente';
+    let resumeDescription = hasResume
+      ? 'Currículo cadastrado. Candidate-se a uma vaga para aparecer na lista de candidatos do RH.'
+      : 'Monte seu currículo e candidate-se a uma vaga para aparecer na lista de candidatos do RH.';
+    let resumeAction = hasResume ? 'Editar currículo' : 'Criar currículo';
+    if (resumeLoadState.status === 'loading') {
+      resumeTitle = 'Carregando currículo';
+      resumeDescription = 'Verificando seu currículo.';
+    } else if (resumeLoadState.status === 'error') {
+      resumeTitle = 'Currículo indisponível';
+      resumeDescription = 'Não foi possível verificar seu currículo. Tente novamente.';
+      resumeAction = 'Tentar novamente';
     }
 
     return (
@@ -93,16 +120,14 @@ export default function Home() {
                 <Icon as={FaFileAlt} color={hasResume ? 'brand.blue' : 'brand.pink'} w={5} h={5} />
               </Flex>
               <Heading size="md" color={headingColor}>
-                {hasResume ? 'Currículo ativo' : 'Currículo pendente'}
+                {resumeTitle}
               </Heading>
             </HStack>
             <Text fontSize="sm" color={textColor} mb={8} lineHeight="1.6">
-              {hasResume
-                ? 'Seu perfil está montado e visível na vitrine de talentos para empresas parceiras.'
-                : 'Monte seu currículo para participar da vitrine de talentos e acessar oportunidades.'}
+              {resumeDescription}
             </Text>
-            <Button variant="gradient" size="md" w="full" onClick={() => navigate('/criar-perfil')}>
-              {hasResume ? 'Editar currículo' : 'Criar currículo'}
+            <Button variant="gradient" size="md" w="full" isLoading={resumeLoadState.status === 'loading'} onClick={() => resumeLoadState.status === 'error' ? retryResume() : navigate('/criar-perfil')}>
+              {resumeAction}
             </Button>
           </Box>
 
@@ -117,6 +142,8 @@ export default function Home() {
             </HStack>
             {isLoadingBadges ? (
               <CircularProgress isIndeterminate color="brand.blue" size="30px" />
+            ) : badgesError ? (
+              <Box mb={6}><Text>Não foi possível carregar suas avaliações.</Text><Button mt={2} size="sm" onClick={() => retryBadges()}>Tentar novamente</Button></Box>
             ) : badges.filter(b => b.ganhouBadge).length > 0 ? (
               <HStack spacing={3} mb={6} flexWrap="wrap">
                 {badges.filter(b => b.ganhouBadge).map(b => (
@@ -128,7 +155,7 @@ export default function Home() {
               </HStack>
             ) : (
               <Text fontSize="sm" color={textColor} mb={8} lineHeight="1.6">
-                Nenhuma avaliação concluída ainda. Realize testes técnicos para validar suas habilidades e ganhar destaque.
+                {badges.length > 0 ? 'Você concluiu avaliações, mas ainda não conquistou selos de competência.' : 'Nenhuma avaliação concluída ainda. Realize testes técnicos para validar suas habilidades.'}
               </Text>
             )}
             <Button size="md" variant="outline" borderColor={border}
@@ -143,6 +170,8 @@ export default function Home() {
           <Heading size="md" mb={6} color={headingColor}>Minhas Candidaturas</Heading>
           {isLoadingCandidaturas ? (
             <CircularProgress isIndeterminate color="brand.blue" size="30px" />
+          ) : candidaturasError ? (
+            <Box><Text>Não foi possível carregar suas candidaturas.</Text><Button mt={2} onClick={() => retryCandidaturas()}>Tentar novamente</Button></Box>
           ) : candidaturas.length > 0 ? (
             <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
               {candidaturas.map((cand) => (
@@ -173,7 +202,9 @@ export default function Home() {
           <VStack spacing={4} align="stretch">
             {isLoadingQuizzes ? (
               <CircularProgress isIndeterminate color="brand.pink" size="30px" />
-            ) : quizzes.slice(0, 3).map((quiz) => {
+            ) : quizzesError ? (
+              <Box><Text>Não foi possível carregar os quizzes.</Text><Button mt={2} onClick={() => retryQuizzes()}>Tentar novamente</Button></Box>
+            ) : quizzes.length === 0 ? <Text>Nenhum quiz disponível.</Text> : quizzes.slice(0, 3).map((quiz) => {
               const myBadge = badges.find(b => b.quizId === quiz.id);
               const completed = !!myBadge;
               const hasBadge = myBadge?.ganhouBadge;
@@ -193,8 +224,8 @@ export default function Home() {
                   </HStack>
                   <Button size="sm" variant={completed ? "ghost" : "outline"} borderColor="whiteAlpha.200" color={completed ? "gray.500" : "brand.pink"}
                     fontWeight="600" _hover={!completed ? { bg: 'brand.pink', color: 'white', borderColor: 'brand.pink' } : {}}
-                    borderRadius="6px" onClick={() => navigate(`/quizzes/${quiz.id}`)}>
-                    {completed ? 'Refazer' : 'Iniciar'}
+                    borderRadius="6px" isDisabled={completed || badgesError || isLoadingBadges} onClick={() => navigate(`/quizzes/${quiz.id}`)}>
+                    {completed ? 'Concluído' : 'Iniciar'}
                   </Button>
                 </Flex>
               );
@@ -226,16 +257,16 @@ export default function Home() {
         <Text fontSize="lg" color={textColor} mb={10} maxW="2xl" mx="auto">
           Cadastre-se conosco, valide sua oportunidade talentosa e ganhe visibilidade para empresas parceiras da região.
         </Text>
-        <HStack spacing={4} justify="center">
+        <Flex direction={{ base: 'column', sm: 'row' }} gap={4} justify="center">
           <Button variant="gradient" size="lg" px={8} py={7} onClick={() => openAuthModal('register')}>
             Criar Conta Gratuita
           </Button>
-          <Button variant="outline" size="lg" px={8} py={7} color="white" borderColor="whiteAlpha.400"
-            _hover={{ bg: 'whiteAlpha.100', borderColor: 'white' }}
+          <Button variant="outline" size="lg" px={8} py={7} color={loginColor} borderColor={loginBorder}
+            _hover={{ bg: loginHoverBg, borderColor: loginColor }}
             onClick={() => openAuthModal('login')}>
             Fazer Login
           </Button>
-        </HStack>
+        </Flex>
       </Container>
 
 
@@ -253,7 +284,7 @@ export default function Home() {
             {[
               { icon: FaRegFileAlt, title: 'Monte seu currículo', desc: 'Preencha seu perfil com dados profissionais, experiências e habilidades. Destaque o que faz você se destacar.' },
               { icon: FaRegCheckCircle, title: 'Valide suas competências', desc: 'Realize avaliações e conquiste selos de competência que comprovam suas habilidades no mercado.' },
-              { icon: FaRegBuilding, title: 'Conecte-se com empresas', desc: 'Seu perfil será disponibilizado para empresas parceiras que buscam profissionais como você.' }
+              { icon: FaRegBuilding, title: 'Conecte-se com empresas', desc: 'Após cadastrar seu currículo e se candidatar a uma vaga, seu perfil aparece na lista de candidatos do RH.' }
             ].map((step, idx) => (
               <Box key={idx} bg={bgCard} p={8} borderRadius="2xl" border="1px solid" borderColor={border} boxShadow={cardShadow}
                 transition="all 0.3s" _hover={{ transform: 'translateY(-8px)', boxShadow: hoverShadow, borderColor: hoverBorder }}>
@@ -269,43 +300,6 @@ export default function Home() {
       </Box>
 
 
-      <Box py={20} pb={32}>
-        <Container maxW="6xl">
-          <Box textAlign="center" mb={16}>
-            <Text fontSize="xs" fontWeight="700" color="brand.pink" letterSpacing="0.1em" textTransform="uppercase" mb={3}>
-              Nossos Talentos
-            </Text>
-            <Heading size="lg" color={headingColor} mb={4}>Vitrine de Talentos</Heading>
-            <Text color={textColor} fontSize="sm">Parte do alto potencial validado e disponível para recrutamento de empresas parceiras.</Text>
-          </Box>
-
-          <Grid templateColumns={{ base: '1fr', md: 'repeat(3, 1fr)' }} gap={6}>
-            {[
-              { name: 'Camila Rodrigues', role: 'UX Designer', skills: ['Figma', 'Adobe', 'Sketch'], avatar: 'https://bit.ly/dan-abramov' },
-              { name: 'Lucas Pereira', role: 'Desenvolvedor Full Stack', skills: ['React', 'Node', 'AWS'], avatar: 'https://bit.ly/ryan-florence' },
-              { name: 'Ana Silva', role: 'Analista de Dados', skills: ['Python', 'SQL', 'Power BI'], avatar: 'https://bit.ly/sage-adebayo' }
-            ].map((talent, idx) => (
-              <Box key={idx} bg={bgCard} p={6} borderRadius="2xl" border="1px solid" borderColor={border} boxShadow={cardShadow}
-                transition="all 0.3s" _hover={{ transform: 'translateY(-8px)', boxShadow: hoverShadow, borderColor: hoverBorder }}>
-                <HStack spacing={4} mb={6}>
-                  <Avatar src={talent.avatar} size="md" />
-                  <Box>
-                    <Heading size="sm" color={headingColor}>{talent.name}</Heading>
-                    <Text fontSize="xs" color={textColor} mt={1}>{talent.role}</Text>
-                  </Box>
-                </HStack>
-                <HStack spacing={2}>
-                  {talent.skills.map((skill) => (
-                    <Tag key={skill} size="sm" bg="rgba(59, 130, 246, 0.1)" color="brand.blue" borderRadius="full" px={3} py={1}>
-                      {skill}
-                    </Tag>
-                  ))}
-                </HStack>
-              </Box>
-            ))}
-          </Grid>
-        </Container>
-      </Box>
     </Box>
   );
 }

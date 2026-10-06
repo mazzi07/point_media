@@ -12,6 +12,7 @@ import { useAuth } from '../context/useAuth';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useQuery } from '@tanstack/react-query';
+import { normalizeProfileUrl } from '../utils/profileUrl';
 import { generateResumePdf } from '../utils/resumePdf';
 import ResumePDFTemplate from '../components/ResumePDFTemplate';
 
@@ -33,33 +34,34 @@ export default function Perfil() {
   const avatarBorderColor = useColorModeValue('white', 'gray.700');
 
   // Fetch resume data
-  const { data: curriculo, isLoading: isLoadingCurriculo } = useQuery({
+  const { data: curriculo, isLoading: isLoadingCurriculo, isError: curriculoError, refetch: retryCurriculo } = useQuery({
     queryKey: ['meu-curriculo'],
     queryFn: async () => {
       const res = await api.get('/api/curriculo');
-      if (!res.ok) return null;
+      if (res.status === 404) return null;
+      if (!res.ok) throw new Error('Falha ao carregar currículo');
       return res.json();
     },
     enabled: isLoggedIn,
   });
 
   // Fetch badges
-  const { data: badges = [], isLoading: isLoadingBadges } = useQuery({
+  const { data: badges = [], isLoading: isLoadingBadges, isError: badgesError, refetch: retryBadges } = useQuery({
     queryKey: ['meus-badges'],
     queryFn: async () => {
       const res = await api.get('/api/quizzes/meus-badges');
-      if (!res.ok) return [];
+      if (!res.ok) throw new Error('Falha ao carregar dados');
       return res.json();
     },
     enabled: isLoggedIn,
   });
 
   // Fetch candidaturas
-  const { data: candidaturas = [], isLoading: isLoadingCandidaturas } = useQuery({
+  const { data: candidaturas = [], isLoading: isLoadingCandidaturas, isError: candidaturasError, refetch: retryCandidaturas } = useQuery({
     queryKey: ['minhas-candidaturas'],
     queryFn: async () => {
       const res = await api.get('/api/vagas/minhas-candidaturas');
-      if (!res.ok) return [];
+      if (!res.ok) throw new Error('Falha ao carregar dados');
       return res.json();
     },
     enabled: isLoggedIn,
@@ -76,6 +78,10 @@ export default function Perfil() {
         <Spinner size="lg" color="brand.blue" />
       </Flex>
     );
+  }
+
+  if (curriculoError) {
+    return <Flex minH="60vh" direction="column" align="center" justify="center" gap={4}><Text>Não foi possível carregar seu currículo.</Text><Button onClick={() => retryCurriculo()}>Tentar novamente</Button></Flex>;
   }
 
   const badgesEarned = badges.filter(b => b.ganhouBadge);
@@ -131,19 +137,19 @@ export default function Perfil() {
                 </Badge>
               )}
               <HStack spacing={4} mt={2} justify={{ base: 'center', md: 'flex-start' }} flexWrap="wrap">
-                {curriculo?.linkedin && (
-                  <Button as="a" href={curriculo.linkedin.startsWith('http') ? curriculo.linkedin : `https://${curriculo.linkedin}`}
-                    target="_blank" size="sm" leftIcon={<FaLinkedin />} colorScheme="linkedin" variant="ghost">
+                {normalizeProfileUrl(curriculo?.linkedin) && (
+                  <Button as="a" href={normalizeProfileUrl(curriculo.linkedin)}
+                    target="_blank" rel="noopener noreferrer" size="sm" leftIcon={<FaLinkedin />} colorScheme="linkedin" variant="ghost">
                     LinkedIn
                   </Button>
                 )}
-                {curriculo?.github && (
-                  <Button as="a" href={curriculo.github.startsWith('http') ? curriculo.github : `https://${curriculo.github}`}
-                    target="_blank" size="sm" leftIcon={<FaGithub />} variant="ghost" color={textColor}>
+                {normalizeProfileUrl(curriculo?.github) && (
+                  <Button as="a" href={normalizeProfileUrl(curriculo.github)}
+                    target="_blank" rel="noopener noreferrer" size="sm" leftIcon={<FaGithub />} variant="ghost" color={textColor}>
                     GitHub
                   </Button>
                 )}
-                <Button size="sm" onClick={handleDownloadPDF} isLoading={isGeneratingPdf} variant="outline" colorScheme="blue">
+                <Button size="sm" onClick={handleDownloadPDF} isLoading={isGeneratingPdf} isDisabled={!curriculo} variant="outline" colorScheme="blue">
                   Baixar PDF
                 </Button>
                 <Button size="sm" leftIcon={<FaEdit />} variant="gradient" onClick={() => navigate('/criar-perfil')}>
@@ -222,7 +228,9 @@ export default function Perfil() {
               Selos de Competência ({badgesEarned.length})
             </Text>
           </HStack>
-          {badgesEarned.length > 0 ? (
+          {badgesError ? (
+            <Box><Text>Não foi possível carregar seus selos.</Text><Button mt={2} onClick={() => retryBadges()}>Tentar novamente</Button></Box>
+          ) : badgesEarned.length > 0 ? (
             <SimpleGrid columns={{ base: 1, sm: 2, md: 3 }} spacing={4}>
               {badgesEarned.map(b => (
                 <Box key={b.quizId} bg={sectionBg} p={4} borderRadius="xl" border="1px solid" borderColor={border}>
@@ -263,6 +271,8 @@ export default function Perfil() {
           </HStack>
           {isLoadingCandidaturas ? (
             <CircularProgress isIndeterminate color="brand.blue" size="30px" />
+          ) : candidaturasError ? (
+            <Box><Text>Não foi possível carregar suas candidaturas.</Text><Button mt={2} onClick={() => retryCandidaturas()}>Tentar novamente</Button></Box>
           ) : candidaturas.length > 0 ? (
             <VStack spacing={3} align="stretch">
               {candidaturas.map((cand) => (

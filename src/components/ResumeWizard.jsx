@@ -15,6 +15,7 @@ import StepExperience from './wizard/StepExperience';
 import StepSkills from './wizard/StepSkills';
 import StepReview from './wizard/StepReview';
 import ResumePDFTemplate from './ResumePDFTemplate';
+import { useQueryClient } from '@tanstack/react-query';
 import { generateResumePdf } from '../utils/resumePdf';
 
 export default function ResumeWizard() {
@@ -22,6 +23,7 @@ export default function ResumeWizard() {
   const steps = ['Dados Básicos', 'Experiência', 'Habilidades', 'Revisão'];
 
   const toast = useToast();
+  const queryClient = useQueryClient();
   const { user, setHasResume } = useAuth();
 
 
@@ -35,6 +37,7 @@ export default function ResumeWizard() {
   const [skillInput, setSkillInput] = useState('');
 
   const [loadingData, setLoadingData] = useState(true);
+  const [resumeExists, setResumeExists] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [loadAttempt, setLoadAttempt] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -55,6 +58,7 @@ export default function ResumeWizard() {
           github: data.github || '',
         });
         setHabilidades(data.habilidades || []);
+        setResumeExists(true);
       })
       .catch(() => { if (active) setLoadError(true); })
       .finally(() => { if (active) setLoadingData(false); });
@@ -72,7 +76,7 @@ export default function ResumeWizard() {
 
   const handleNextStep = () => {
     if (currentStep === 0) {
-      if (!user?.hasCurriculo && (!curriculo.linkedin.trim() || !curriculo.github.trim())) {
+      if (!resumeExists && (!curriculo.linkedin.trim() || !curriculo.github.trim())) {
         setIsAlertOpen(true);
         return;
       }
@@ -139,6 +143,9 @@ export default function ResumeWizard() {
 
       if (response.ok && data.success) {
         setHasResume(true);
+        queryClient.invalidateQueries({ queryKey: ['meu-curriculo'] });
+        queryClient.invalidateQueries({ queryKey: ['candidatos'] });
+        queryClient.invalidateQueries({ queryKey: ['admin_stats'] });
         setIsSuccessModalOpen(true);
       } else {
         toast({
@@ -355,7 +362,7 @@ export default function ResumeWizard() {
           </AlertDialogHeader>
 
           <AlertDialogBody color={dialogTextColor}>
-            Seu currículo foi atualizado e agora você está visível para oportunidades.
+            Seu currículo foi salvo. Para aparecer na lista de candidatos do RH, candidate-se a pelo menos uma vaga.
             <br/><br/>
             <strong>Deseja colocar seu conhecimento em prática agora mesmo?</strong>
             <br/>

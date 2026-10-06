@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   Box, Container, Heading, Text, Flex, useColorModeValue,
-  Icon, SimpleGrid, Tabs, TabList, TabPanels, Tab, TabPanel
+  Icon, SimpleGrid, Tabs, TabList, TabPanels, Tab, TabPanel, Button, Spinner
 } from '@chakra-ui/react';
 import { FaUsers, FaBriefcase, FaGraduationCap, FaChartLine } from 'react-icons/fa';
 import { useQuery } from '@tanstack/react-query';
@@ -15,11 +15,11 @@ export default function AdminPage() {
   const headingColor = useColorModeValue('gray.900', 'white');
   const mutedColor = useColorModeValue('gray.500', 'gray.400');
 
-  const { data: stats } = useQuery({
+  const { data: stats, isLoading, isError, refetch } = useQuery({
     queryKey: ['admin_stats'],
     queryFn: async () => {
       const res = await api.get('/api/admin/stats');
-      if (!res.ok) return null;
+      if (!res.ok) throw new Error('Falha ao carregar estatísticas');
       return res.json();
     },
     retry: false,
@@ -38,10 +38,12 @@ export default function AdminPage() {
           Banco de Candidatos
         </Heading>
         <Text fontSize="sm" color={mutedColor}>
-          Visualize e filtre candidatos com currículo cadastrado.
+          Visualize e filtre pessoas com currículo e ao menos uma candidatura.
         </Text>
       </Box>
 
+      {isLoading && <Spinner aria-label="Carregando estatísticas" mb={4} />}
+      {isError && <Box mb={4}><Text>Não foi possível carregar as estatísticas.</Text><Button mt={2} onClick={() => refetch()}>Tentar novamente</Button></Box>}
       <SimpleGrid columns={{ base: 1, sm: 2, md: 4 }} spacing={4} mb={8}>
         <Box bg={cardBg} p={5} borderRadius="xl" border="1px solid" borderColor={border} boxShadow="sm">
           <Flex align="center" justify="space-between">
@@ -83,7 +85,7 @@ export default function AdminPage() {
           <Flex align="center" justify="space-between">
             <Box>
               <Text fontSize="xs" fontWeight="600" color={mutedColor} textTransform="uppercase">Média de Acertos</Text>
-              <Heading size="md" color={headingColor} mt={1}>{stats?.mediaAcertosGeral ? `${stats.mediaAcertosGeral}%` : '-'}</Heading>
+              <Heading size="md" color={headingColor} mt={1}>{stats?.mediaAcertosGeral != null ? `${stats.mediaAcertosGeral}%` : '-'}</Heading>
             </Box>
             <Flex w={10} h={10} borderRadius="lg" bg="rgba(16, 185, 129, 0.1)" color="green.400" align="center" justify="center">
               <Icon as={FaChartLine} w={5} h={5} />

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Container, Heading, Text, Grid, Flex, useColorModeValue, Button, Tag, HStack, Input, InputGroup, InputLeftElement, Icon, VStack, Divider, useDisclosure, useToast } from '@chakra-ui/react';
 import { FaSearch, FaBriefcase } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { Skeleton, SkeletonCircle } from '@chakra-ui/react';
@@ -9,7 +10,8 @@ import VagaCard from '../components/vagas/VagaCard';
 import VagaDetailsModal from '../components/vagas/VagaDetailsModal';
 
 export default function Vagas() {
-  const { openAuthModal, isLoggedIn } = useAuth();
+  const { openAuthModal, isLoggedIn, user } = useAuth();
+  const navigate = useNavigate();
   const bgCard = useColorModeValue('brand.lightCardBg', 'brand.cardBg');
   const border = useColorModeValue('transparent', 'whiteAlpha.100');
   const cardShadow = useColorModeValue('0 8px 30px rgba(0,0,0,0.04)', '0 10px 30px rgba(0,0,0,0.4)');
@@ -20,6 +22,7 @@ export default function Vagas() {
 
   const [activeFilter, setActiveFilter] = useState('Todos');
   const [searchTerm, setSearchTerm] = useState('');
+  const [appliedSearchTerm, setAppliedSearchTerm] = useState('');
   
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedVaga, setSelectedVaga] = useState(null);
@@ -34,15 +37,15 @@ export default function Vagas() {
   const filters = ['Todos', 'Design', 'Marketing', 'Desenvolvimento', 'Vendas', 'Gestão'];
 
   // busca as vagas da api
-  const { data: vagas = [], isLoading: isLoadingVagas, refetch } = useQuery({
-    queryKey: ['vagas', activeFilter],
+  const { data: vagas = [], isLoading: isLoadingVagas, isError: vagasError, refetch } = useQuery({
+    queryKey: ['vagas', activeFilter, appliedSearchTerm],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (activeFilter !== 'Todos') {
         params.append('area', activeFilter);
       }
-      if (searchTerm) {
-        params.append('busca', searchTerm);
+      if (appliedSearchTerm) {
+        params.append('busca', appliedSearchTerm);
       }
       const response = await api.get(`/api/vagas?${params.toString()}`);
       if (!response.ok) throw new Error('Erro ao buscar vagas');
@@ -51,12 +54,12 @@ export default function Vagas() {
     staleTime: 30000,
   });
 
-  const { data: minhasCandidaturas = [], refetch: refetchCandidaturas } = useQuery({
+  const { data: minhasCandidaturas = [], refetch: refetchCandidaturas, isError: candidaturasError } = useQuery({
     queryKey: ['minhas-candidaturas'],
     queryFn: async () => {
       if (!isLoggedIn) return [];
       const response = await api.get('/api/vagas/minhas-candidaturas');
-      if (!response.ok) return [];
+      if (!response.ok) throw new Error('Erro ao buscar candidaturas');
       return response.json();
     },
     enabled: isLoggedIn,
@@ -91,7 +94,9 @@ export default function Vagas() {
   };
 
   const handleSearch = () => {
-    refetch();
+    const nextSearchTerm = searchTerm.trim();
+    if (nextSearchTerm === appliedSearchTerm) refetch();
+    else setAppliedSearchTerm(nextSearchTerm);
   };
 
   const VagaSkeleton = () => (
@@ -182,22 +187,29 @@ export default function Vagas() {
           <Flex justify="space-between" align="center" mb={6}>
             <Box>
               <Heading size="md" color={headingColor} mb={1}>Oportunidades Disponíveis</Heading>
-              {!isLoadingVagas && <Text fontSize="xs" color={textColor}>{vagas.length} vaga{vagas.length !== 1 ? 's' : ''} encontrada{vagas.length !== 1 ? 's' : ''}</Text>}
+              {!isLoadingVagas && !vagasError && <Text fontSize="xs" color={textColor}>{vagas.length} vaga{vagas.length !== 1 ? 's' : ''} encontrada{vagas.length !== 1 ? 's' : ''}</Text>}
             </Box>
           </Flex>
 
+          {vagasError && (
+            <Box textAlign="center" py={6}>
+              <Text>Não foi possível carregar as vagas.</Text>
+              <Button mt={3} onClick={() => refetch()}>Tentar novamente</Button>
+            </Box>
+          )}
+          {candidaturasError && <Text mb={4}>Não foi possível verificar suas candidaturas. <Button size="sm" onClick={() => refetchCandidaturas()}>Tentar novamente</Button></Text>}
           <Grid templateColumns={{ base: '1fr', md: 'repeat(3, 1fr)' }} gap={6}>
             {isLoadingVagas ? (
               <>
                 <VagaSkeleton /><VagaSkeleton /><VagaSkeleton />
                 <VagaSkeleton /><VagaSkeleton /><VagaSkeleton />
               </>
-            ) : vagas.map(vaga => (
+            ) : vagasError ? null : vagas.map(vaga => (
               <VagaCard key={vaga.id} vaga={vaga} onOpenModal={handleOpenModal} />
             ))}
           </Grid>
           
-          {!isLoadingVagas && vagas.length === 0 && (
+          {!isLoadingVagas && !vagasError && vagas.length === 0 && (
             <Flex justify="center" py={12}>
               <Text color={textColor}>Nenhuma vaga encontrada com os filtros selecionados.</Text>
             </Flex>
@@ -206,11 +218,11 @@ export default function Vagas() {
       </Box>
 
 
-      {!isLoadingVagas && vagas.length > 0 && (
+      {!isLoadingVagas && !vagasError && vagas.length > 0 && (
         <Box mb={24}>
           <Container maxW="6xl">
             <Flex justify="space-between" align="center" mb={6}>
-              <Heading size="md" color={headingColor}>Abertas Recentemente</Heading>
+              <Heading size="md" color={headingColor}>Outras Oportunidades</Heading>
             </Flex>
 
             <VStack spacing={0} align="stretch" bg={bgCard} border="1px solid" borderColor={border} borderRadius="16px" overflow="hidden">
@@ -252,8 +264,8 @@ export default function Vagas() {
         <Text color={textColor} fontSize="md" mb={8} maxW="xl" mx="auto">
           Faça parte da nossa equipe e construa o futuro do mercado digital com a Point Media.
         </Text>
-        <Button variant="gradient" size="lg" px={8} py={7} onClick={() => openAuthModal('register')}>
-          Criar Conta e Candidatar-se
+        <Button variant="gradient" size="lg" px={8} py={7} onClick={() => isLoggedIn ? navigate(user?.tipo === 'ADMIN' ? '/admin' : '/criar-perfil') : openAuthModal('register')}>
+          {isLoggedIn ? (user?.tipo === 'ADMIN' ? 'Ir ao Painel Admin' : 'Preparar meu Currículo') : 'Criar Conta e Candidatar-se'}
         </Button>
       </Container>
 
@@ -263,6 +275,7 @@ export default function Vagas() {
         vaga={selectedVaga}
         isApplied={minhasCandidaturas.some(c => c.vagaId === selectedVaga?.id)}
         isApplying={isApplying}
+        applicationStatusUnavailable={candidaturasError}
         onApply={handleCandidatar}
       />
     </Box>

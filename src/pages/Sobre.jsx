@@ -1,10 +1,12 @@
 import React from 'react';
 import { Box, Container, Heading, Text, Grid, Flex, Icon, useColorModeValue, Button, Tag, HStack } from '@chakra-ui/react';
 import { FaRegLightbulb, FaBullseye, FaUsers, FaPaintBrush, FaChartLine, FaCogs, FaDatabase } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 
 export default function Sobre() {
-  const { openAuthModal } = useAuth();
+  const { openAuthModal, isLoggedIn, user } = useAuth();
+  const navigate = useNavigate();
   const bgCard = useColorModeValue('white', 'brand.cardBg');
   const border = useColorModeValue('gray.200', 'whiteAlpha.100');
   const textColor = useColorModeValue('gray.600', 'gray.400');
@@ -109,8 +111,8 @@ export default function Sobre() {
         <Text color={textColor} fontSize="md" mb={8} maxW="xl" mx="auto">
           Junte-se a nós e faça parte de uma empresa que está revolucionando o mercado digital.
         </Text>
-        <Button variant="gradient" size="lg" px={8} py={7} onClick={() => openAuthModal('register')}>
-          Criar Conta Gratuita
+        <Button variant="gradient" size="lg" px={8} py={7} onClick={() => isLoggedIn ? navigate(user?.tipo === 'ADMIN' ? '/admin' : '/vagas') : openAuthModal('register')}>
+          {isLoggedIn ? (user?.tipo === 'ADMIN' ? 'Ir ao Painel Admin' : 'Ver Vagas') : 'Criar Conta Gratuita'}
         </Button>
       </Container>
     </Box>

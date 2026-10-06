@@ -1,6 +1,6 @@
 import React from 'react'
-import { Box } from '@chakra-ui/react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { Box, Heading, Text, Button } from '@chakra-ui/react'
+import { BrowserRouter, Routes, Route, Navigate, Link as RouterLink } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 const queryClient = new QueryClient();
@@ -57,6 +57,13 @@ function App() {
               } />
               <Route path="/admin" element={
                 <AdminRoute><AdminPage /></AdminRoute>
+              } />
+              <Route path="*" element={
+                <Box textAlign="center" py={16} px={4}>
+                  <Heading as="h1" size="lg" mb={4}>Página não encontrada</Heading>
+                  <Text mb={6}>O endereço informado não existe.</Text>
+                  <Button as={RouterLink} to="/" variant="gradient">Voltar ao início</Button>
+                </Box>
               } />
             </Routes>
             <AuthModal />

@@ -7,6 +7,7 @@ import {
 } from '@chakra-ui/react';
 import { FaSearch, FaLinkedin, FaGithub, FaBell } from 'react-icons/fa';
 import { useQuery } from '@tanstack/react-query';
+import { normalizeProfileUrl } from '../../utils/profileUrl';
 import { api } from '../../services/api';
 
 export default function CandidatosTab() {
@@ -38,7 +39,7 @@ export default function CandidatosTab() {
   const cancelColor = useColorModeValue('gray.600', 'gray.300');
   const tableHeaderBg = useColorModeValue('gray.50', 'whiteAlpha.50');
 
-  const { data: candidatos = [], isLoading, isFetching } = useQuery({
+  const { data: candidatos = [], isLoading, isFetching, isError, refetch } = useQuery({
     queryKey: ['candidatos', buscaAtiva.cargo, buscaAtiva.habilidade],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -152,6 +153,8 @@ export default function CandidatosTab() {
           <CandidatoSkeleton />
           <CandidatoSkeleton />
         </VStack>
+      ) : isError ? (
+        <Box py={10} textAlign="center"><Text>Não foi possível carregar os candidatos.</Text><Button mt={3} onClick={() => refetch()}>Tentar novamente</Button></Box>
       ) : candidatos.length === 0 ? (
         <Box py={16} textAlign="center">
           <Text fontSize="sm" color={subtleColor}>
@@ -207,14 +210,14 @@ export default function CandidatosTab() {
                         </Box>
                       )}
                       <HStack spacing={3} mt={2}>
-                        {c.linkedin && (
-                          <Text as="a" href={c.linkedin} target="_blank" fontSize="xs"
+                        {normalizeProfileUrl(c.linkedin) && (
+                          <Text as="a" href={normalizeProfileUrl(c.linkedin)} target="_blank" rel="noopener noreferrer" fontSize="xs"
                             color="brand.blue" display="flex" alignItems="center" gap={1}>
                             <Icon as={FaLinkedin} /> LinkedIn
                           </Text>
                         )}
-                        {c.github && (
-                          <Text as="a" href={c.github} target="_blank" fontSize="xs"
+                        {normalizeProfileUrl(c.github) && (
+                          <Text as="a" href={normalizeProfileUrl(c.github)} target="_blank" rel="noopener noreferrer" fontSize="xs"
                             color={githubColor}
                             display="flex" alignItems="center" gap={1}>
                             <Icon as={FaGithub} /> GitHub
@@ -317,13 +320,13 @@ export default function CandidatosTab() {
               </Box>
 
               <HStack spacing={4} pt={2}>
-                {selectedCand?.linkedin && (
-                  <Button as="a" href={selectedCand.linkedin} target="_blank" size="sm" colorScheme="linkedin" leftIcon={<Icon as={FaLinkedin} />}>
+                {normalizeProfileUrl(selectedCand?.linkedin) && (
+                  <Button as="a" href={normalizeProfileUrl(selectedCand.linkedin)} target="_blank" rel="noopener noreferrer" size="sm" colorScheme="linkedin" leftIcon={<Icon as={FaLinkedin} />}>
                     LinkedIn
                   </Button>
                 )}
-                {selectedCand?.github && (
-                  <Button as="a" href={selectedCand.github} target="_blank" size="sm" variant="outline" leftIcon={<Icon as={FaGithub} />}>
+                {normalizeProfileUrl(selectedCand?.github) && (
+                  <Button as="a" href={normalizeProfileUrl(selectedCand.github)} target="_blank" rel="noopener noreferrer" size="sm" variant="outline" leftIcon={<Icon as={FaGithub} />}>
                     GitHub
                   </Button>
                 )}
