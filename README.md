@@ -113,6 +113,14 @@ CREATE DATABASE point_media_talent_bank;
 > O script `V2__add_vagas.sql` cria automaticamente a conta de administrador inicial.
 
 ### 2. Backend (Spring Boot)
+Defina uma chave JWT privada antes de iniciar o backend. Para uma sessão local de PowerShell, gere uma chave aleatória sem imprimi-la:
+```powershell
+$secretBytes = New-Object byte[] 64
+[System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($secretBytes)
+$env:JWT_SECRET = [Convert]::ToBase64String($secretBytes)
+```
+Em produção, armazene uma chave forte e estável em `JWT_SECRET` no gerenciador de segredos do ambiente. Não existe fallback no código.
+
 ```bash
 cd backend
 mvn spring-boot:run
@@ -172,6 +180,9 @@ mvn -DskipTests package
 ---
 
 ## 🚨 Notas e Known Issues
+- **Segurança de release**: use HTTPS e `PRODUCTION=true` para cookies `Secure`. Configure `CORS_ALLOWED_ORIGINS` com as origens completas permitidas, separadas por vírgula, sem caminhos, barra final ou curingas (ex.: `https://talentos.exemplo.com`). Produção não inicia sem essa configuração; desenvolvimento sem configuração aceita apenas `http://localhost:5173` e `http://127.0.0.1:5173`.
+- **Admin de demonstração**: V2 cria `admin@pointmedia.com` e V8 redefine sua senha para `admin123`. As migrações históricas permanecem intactas. Após aplicar todas as migrações e antes de expor o ambiente, substitua `usuarios.senha_hash` dessa conta por um BCrypt de uma senha forte e exclusiva, via operação administrativa controlada, e verifique o login. Não publique o ambiente com a senha conhecida; trocar apenas `JWT_SECRET` não troca essa senha.
+- **CSRF**: cookies HttpOnly/SameSite=Lax e CORS com origens exatas reduzem requisições entre sites, mas não substituem proteção CSRF completa. O contrato atual continua sem token CSRF; origens/subdomínios confiáveis precisam permanecer sob controle. Uma futura proteção com token deve implementar cliente e servidor juntos.
 - **Migração V9 existente**: `V9__quiz_result_integrity.sql` adiciona o snapshot `total_perguntas` e a restrição única por usuário/quiz. Ela **ainda não foi executada em uma instância descartável real de MySQL**. Antes de aplicá-la a uma base existente com dados, execute este preflight de duplicados:
 
 ```sql

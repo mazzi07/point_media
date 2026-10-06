@@ -13,14 +13,17 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    @Value("${jwt.secret}")
-    private String secret;
+    private final SecretKey key;
+    private final long expirationMs;
 
-    @Value("${jwt.expiration-ms}")
-    private long expirationMs;
-
-    private SecretKey getKey() {
-        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+    public JwtUtil(@Value("${jwt.secret}") String secret,
+                   @Value("${jwt.expiration-ms}") long expirationMs) {
+        if (secret == null || secret.isBlank()) {
+            throw new IllegalArgumentException("Configure JWT_SECRET com uma chave forte e privada.");
+        }
+        // Valida a chave ao iniciar, antes de aceitar cadastros ou logins.
+        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        this.expirationMs = expirationMs;
     }
 
     public String generateToken(String email, String tipoUsuario) {
@@ -29,7 +32,7 @@ public class JwtUtil {
                 .claim("tipo", tipoUsuario)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expirationMs))
-                .signWith(getKey())
+                .signWith(key)
                 .compact();
     }
 
@@ -52,7 +55,7 @@ public class JwtUtil {
 
     private Claims parseClaims(String token) {
         return Jwts.parser()
-                .verifyWith(getKey())
+                .verifyWith(key)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();

@@ -23,6 +23,7 @@ public class SpaWebConfig implements WebMvcConfigurer {
         registry.addViewController("/quizzes").setViewName("forward:/index.html");
         registry.addViewController("/quizzes/**").setViewName("forward:/index.html");
         registry.addViewController("/criar-perfil").setViewName("forward:/index.html");
+        registry.addViewController("/perfil").setViewName("forward:/index.html");
         registry.addViewController("/admin").setViewName("forward:/index.html");
         
         // Catch-all for other non-api routes (just in case)

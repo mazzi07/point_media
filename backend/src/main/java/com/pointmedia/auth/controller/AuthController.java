@@ -14,12 +14,18 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Value;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+
+    private static final Pattern EMAIL_PATTERN = Pattern.compile(
+            "^[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*"
+            + "@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?"
+            + "(?:\\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$");
 
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
@@ -50,6 +56,12 @@ public class AuthController {
                     .body(Map.of("success", false, "message", "Todos os campos são obrigatórios."));
             }
 
+            if (email.length() > 254 || !EMAIL_PATTERN.matcher(email).matches()
+                    || email.indexOf('@') > 64) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", "Informe um e-mail válido."));
+            }
+
             if (senha.length() < 6) {
                 return ResponseEntity.badRequest()
                     .body(Map.of("success", false, "message", "A senha deve ter no mínimo 6 caracteres."));
@@ -60,6 +72,7 @@ public class AuthController {
                     .body(Map.of("success", false, "message", "E-mail já está em uso."));
             }
 
+            // O cadastro público nunca pode promover uma conta por dados do cliente.
             TipoUsuario tipoUsuario = TipoUsuario.CANDIDATO;
             String senhaHash = passwordEncoder.encode(senha);
 

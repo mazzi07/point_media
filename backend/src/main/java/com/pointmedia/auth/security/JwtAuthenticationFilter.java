@@ -2,6 +2,7 @@ package com.pointmedia.auth.security;
 
 import com.pointmedia.auth.model.Usuario;
 import com.pointmedia.auth.repository.UsuarioRepository;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -44,32 +45,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
 
-        if (token == null || !jwtUtil.isTokenValid(token)) {
-
-            filterChain.doFilter(request, response);
-            return;
+        String email = null;
+        if (token != null) {
+            try {
+                email = jwtUtil.extractEmail(token);
+            } catch (JwtException | IllegalArgumentException exception) {
+                // Token inválido/expirado segue anônimo: APIs privadas responderão 401.
+            }
         }
 
-        String email = jwtUtil.extractEmail(token);
-        String tipo = jwtUtil.extractTipo(token);
-
-
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
-        if (usuarioOpt.isEmpty()) {
-
-            filterChain.doFilter(request, response);
-            return;
+        if (email != null && !email.isBlank() && SecurityContextHolder.getContext().getAuthentication() == null) {
+            Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
+            if (usuarioOpt.isPresent()) {
+                // O JWT identifica a conta; a permissão vem do papel atual no banco.
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                        email, null, List.of(new SimpleGrantedAuthority("ROLE_" + usuarioOpt.get().getTipoUsuario().name())));
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
         }
-
-
-        // Autentica no contexto do Spring Security com a role do usuário
-        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                email,
-                null,
-                List.of(new SimpleGrantedAuthority("ROLE_" + tipo))
-        );
-
-        SecurityContextHolder.getContext().setAuthentication(authentication);
 
         filterChain.doFilter(request, response);
     }
