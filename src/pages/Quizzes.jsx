@@ -10,7 +10,7 @@ import { useAuth } from '../context/useAuth';
 
 export default function Quizzes() {
   const navigate = useNavigate();
-  const { isLoggedIn, openAuthModal } = useAuth();
+  const { isLoggedIn, openAuthModal, user } = useAuth();
   
   const bgCard = useColorModeValue('white', 'brand.cardBg');
   const border = useColorModeValue('gray.200', 'whiteAlpha.100');
@@ -108,7 +108,11 @@ export default function Quizzes() {
                       {quiz.descricao}
                     </Text>
                     <Flex gap={3}>
-                      {quiz.isRespondido ? (
+                      {user?.tipo === 'ADMIN' ? (
+                        <Button flex="1" isDisabled>
+                          Indisponível para Admin
+                        </Button>
+                      ) : quiz.isRespondido ? (
                         <Button flex="1" variant="ghost" colorScheme="green" leftIcon={<FaMedal />} isDisabled>
                           Concluído
                         </Button>

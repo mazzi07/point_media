@@ -72,6 +72,11 @@ public class SecurityConfig {
                 // A SPA precisa carregar antes do login; somente os dados /api são privados.
                 .requestMatchers(HttpMethod.GET, "/", "/index.html", "/assets/**", "/*.svg", "/*.png", "/sobre", "/vagas", "/quizzes", "/quizzes/**", "/criar-perfil", "/perfil", "/admin").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/vagas/*/candidatar").hasRole("CANDIDATO")
+                .requestMatchers(HttpMethod.GET, "/api/vagas/minhas-candidaturas").hasRole("CANDIDATO")
+                .requestMatchers("/api/curriculo", "/api/curriculo/**").hasRole("CANDIDATO")
+                .requestMatchers(HttpMethod.POST, "/api/quizzes/*/responder").hasRole("CANDIDATO")
+                .requestMatchers(HttpMethod.GET, "/api/quizzes/meus-badges").hasRole("CANDIDATO")
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

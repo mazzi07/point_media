@@ -3,11 +3,13 @@ import { Box, Container, Heading, Text, Flex, Button, useColorModeValue, Progres
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { FaClock, FaCheckCircle, FaStar, FaTrophy } from 'react-icons/fa';
+import { useAuth } from '../context/useAuth';
 
 export default function QuizTest() {
   const { id } = useParams();
   const navigate = useNavigate();
   const toast = useToast();
+  const { user } = useAuth();
 
   const [quiz, setQuiz] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -28,6 +30,12 @@ export default function QuizTest() {
   const progressBg = useColorModeValue('gray.100', 'whiteAlpha.100');
 
   useEffect(() => {
+    if (user?.tipo === 'ADMIN') {
+      toast({ title: 'Acesso Negado', description: 'Administradores não podem responder quizzes.', status: 'error' });
+      navigate('/quizzes');
+      return;
+    }
+
     api.get(`/api/quizzes/${id}`)
       .then(res => {
         if (!res.ok) throw new Error();
@@ -47,7 +55,7 @@ export default function QuizTest() {
         toast({ title: 'Quiz não encontrado.', status: 'error' });
         navigate('/quizzes');
       });
-  }, [id, navigate, toast]);
+  }, [id, navigate, toast, user]);
 
   // timer do quiz
   const expired = !loading && timeLeft === 0;
@@ -229,10 +237,18 @@ export default function QuizTest() {
                     borderRadius="lg" 
                     cursor="pointer"
                     _hover={{ borderColor: 'brand.pink' }}
+                    _focusWithin={{ boxShadow: '0 0 0 3px rgba(213, 24, 123, 0.5)' }}
                     transition="all 0.2s"
                   >
-                    <Radio value={String(alt.id)} colorScheme="pink" size="lg" display="none" isDisabled={expired} />
-                    <Flex align="center">
+                    <Radio 
+                      value={String(alt.id)} 
+                      colorScheme="pink" 
+                      size="lg" 
+                      position="absolute" 
+                      opacity="0" 
+                      isDisabled={expired} 
+                    />
+                    <Flex align="center" mt="1">
                       <Box w={5} h={5} borderRadius="full" border="2px solid" borderColor={isSelected ? 'brand.pink' : textColor} display="flex" alignItems="center" justify="center" mr={4}>
                         {isSelected && <Box w={2.5} h={2.5} borderRadius="full" bg="brand.pink" />}
                       </Box>

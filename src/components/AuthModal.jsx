@@ -118,7 +118,7 @@ export default function AuthModal() {
   return (
     <Modal isOpen={isAuthModalOpen} onClose={closeAuthModal} isCentered size="4xl">
       <ModalOverlay backdropFilter="blur(4px)" />
-      <ModalContent overflow="hidden" borderRadius="2xl" bg="transparent" border="none" boxShadow="2xl" mx={4}>
+      <ModalContent overflow="hidden" borderRadius="2xl" bg="transparent" border="none" boxShadow="2xl" mx={4} className="dark-modal">
         <ModalCloseButton color="gray.400" zIndex={10} top={4} right={4} _hover={{ color: 'white' }} />
         <Flex direction={{ base: 'column', md: 'row' }} minH={{ base: 'auto', md: '600px' }}>
           
