@@ -6,7 +6,7 @@ import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
-public class SpaWebFilter implements WebMvcConfigurer {
+public class SpaWebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
@@ -17,15 +17,16 @@ public class SpaWebFilter implements WebMvcConfigurer {
 
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
-        // Forward SPA routes to index.html
+        // Permite abrir ou recarregar uma rota do React diretamente pelo navegador.
         registry.addViewController("/sobre").setViewName("forward:/index.html");
         registry.addViewController("/vagas").setViewName("forward:/index.html");
         registry.addViewController("/quizzes").setViewName("forward:/index.html");
         registry.addViewController("/quizzes/**").setViewName("forward:/index.html");
         registry.addViewController("/criar-perfil").setViewName("forward:/index.html");
+        registry.addViewController("/perfil").setViewName("forward:/index.html");
         registry.addViewController("/admin").setViewName("forward:/index.html");
         
-        // Catch-all for other non-api routes (just in case)
+        // Caminhos sem extensão também recebem o ponto de entrada da SPA.
         registry.addViewController("/{path:[^\\.]*}")
                 .setViewName("forward:/index.html");
         registry.addViewController("/**/{path:[^\\.]*}")

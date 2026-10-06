@@ -1,6 +1,5 @@
 package com.pointmedia.auth.controller;
 
-import com.pointmedia.auth.model.Curriculo;
 import com.pointmedia.auth.repository.CandidaturaRepository;
 import com.pointmedia.auth.repository.CurriculoRepository;
 import org.springframework.http.ResponseEntity;
@@ -38,29 +37,29 @@ public class CandidatoController {
             )
             .stream()
             .map(c -> {
-                Map<String, Object> m = new HashMap<>();
-                m.put("usuarioId", c.getUsuario().getId());
-                m.put("nome", c.getUsuario().getNome());
-                m.put("email", c.getUsuario().getEmail());
-                m.put("avatar", c.getUsuario().getAvatar());
-                m.put("cargo", c.getCargo());
-                m.put("experiencia", c.getExperiencia());
-                m.put("habilidades", new java.util.ArrayList<>(c.getHabilidades()));
-                m.put("linkedin", c.getLinkedin());
-                m.put("github", c.getGithub());
+                Map<String, Object> candidatoDados = new HashMap<>();
+                candidatoDados.put("usuarioId", c.getUsuario().getId());
+                candidatoDados.put("nome", c.getUsuario().getNome());
+                candidatoDados.put("email", c.getUsuario().getEmail());
+                candidatoDados.put("avatar", c.getUsuario().getAvatar());
+                candidatoDados.put("cargo", c.getCargo());
+                candidatoDados.put("experiencia", c.getExperiencia());
+                candidatoDados.put("habilidades", new java.util.ArrayList<>(c.getHabilidades()));
+                candidatoDados.put("linkedin", c.getLinkedin());
+                candidatoDados.put("github", c.getGithub());
                 
                 List<Map<String, Object>> vagasCandidatadas = candidaturaRepository.findByUsuario(c.getUsuario())
                     .stream()
                     .map(cand -> {
-                        Map<String, Object> vMap = new HashMap<>();
-                        vMap.put("id", cand.getVaga().getId());
-                        vMap.put("titulo", cand.getVaga().getTitulo());
-                        return vMap;
+                        Map<String, Object> vagaDados = new HashMap<>();
+                        vagaDados.put("id", cand.getVaga().getId());
+                        vagaDados.put("titulo", cand.getVaga().getTitulo());
+                        return vagaDados;
                     })
                     .collect(Collectors.toList());
-                m.put("vagasCandidatadas", vagasCandidatadas);
+                candidatoDados.put("vagasCandidatadas", vagasCandidatadas);
 
-                return m;
+                return candidatoDados;
             })
             .collect(Collectors.toList());
 

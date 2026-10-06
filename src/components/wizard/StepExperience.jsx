@@ -1,4 +1,3 @@
-import React from 'react';
 import { VStack, Heading, Input, Textarea, useColorModeValue } from '@chakra-ui/react';
 
 export default function StepExperience({ curriculo, handleChange }) {

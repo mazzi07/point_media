@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   VStack, Heading, Box, Text, HStack, Tag, TagLabel, Divider, Icon,
   Avatar, Flex, useColorModeValue, Button
@@ -33,7 +32,7 @@ export default function StepReview({ user, curriculo, habilidades, handleDownloa
         onClick={handleDownloadPDF}
         isLoading={isGeneratingPdf}
       >
-        Pré-visualizar e Baixar Currículo em PDF
+        Baixar Currículo em PDF
       </Button>
 
       {/* Dados básicos */}

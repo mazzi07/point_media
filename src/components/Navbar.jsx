@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Box, Flex, Button, useColorModeValue, useColorMode, HStack, Link,
   IconButton, Image, Menu, MenuButton, MenuList, MenuItem, Avatar, Text,
@@ -6,10 +6,11 @@ import {
   Icon, Divider, useToast
 } from '@chakra-ui/react';
 import { Link as RouterLink, useNavigate, useLocation } from 'react-router-dom';
-import { FaBell, FaCircle, FaSun, FaMoon } from 'react-icons/fa';
+import { FaBell, FaCircle, FaSun, FaMoon, FaBars } from 'react-icons/fa';
 import pointLogo from '../assets/point.png';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { api } from '../services/api';
+import { AVATAR_ACCEPT, validateAvatarFile } from '../utils/avatar';
 
 export default function Navbar() {
   const { colorMode, toggleColorMode } = useColorMode();
@@ -17,6 +18,7 @@ export default function Navbar() {
   const location = useLocation();
   const toast = useToast();
   const fileInputRef = useRef(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const { isLoggedIn, logout, user, openAuthModal, updateUserField } = useAuth();
 
   const bg          = useColorModeValue('rgba(255, 255, 255, 0.85)', 'rgba(11, 15, 25, 0.85)');
@@ -37,62 +39,109 @@ export default function Navbar() {
   const resumeBtnBorder = useColorModeValue('blue.100', 'whiteAlpha.200');
 
   // notificacoes do usuario
-  const [notificacoes, setNotificacoes]     = useState([]);
-  const [naoLidas, setNaoLidas]             = useState(0);
+  const userEmail = isLoggedIn ? user?.email : null;
+  const [notificationState, setNotificationState] = useState(() => ({
+    userEmail, notificacoes: [], naoLidas: 0
+  }));
+  const notificationScope = useRef(null);
 
-  const fetchNotificacoes = useCallback(() => {
-    if (!isLoggedIn) return;
-    api.get('/api/notificacoes')
-      .then(async (res) => {
-        if (res.ok) {
-          const data = await res.json();
-          setNotificacoes(data);
-          setNaoLidas(data.filter((n) => !n.lida).length);
-        }
-      })
-      .catch(() => {});
-  }, [isLoggedIn]);
+  // Limpa antes de renderizar os dados de uma conta diferente.
+  if (notificationState.userEmail !== userEmail) {
+    setNotificationState({ userEmail, notificacoes: [], naoLidas: 0 });
+  }
+  const notificacoes = notificationState.userEmail === userEmail ? notificationState.notificacoes : [];
+  const naoLidas = notificationState.userEmail === userEmail ? notificationState.naoLidas : 0;
 
   // busca notificacoes ao logar e atualiza a cada 30s
   useEffect(() => {
+    if (!isLoggedIn || !userEmail) return;
+    const scope = { active: true, reading: new Set(), readIds: new Set() };
+    notificationScope.current = scope;
+    const fetchNotificacoes = () => {
+      api.get('/api/notificacoes')
+        .then(async (res) => {
+          if (res.ok) {
+            const data = await res.json();
+            if (scope.active) {
+              const current = data.map(n => scope.readIds.has(n.id) ? { ...n, lida: true } : n);
+              setNotificationState({
+                userEmail, notificacoes: current, naoLidas: current.filter((n) => !n.lida).length
+              });
+            }
+          }
+        })
+        .catch(() => {});
+    };
     fetchNotificacoes();
     const interval = setInterval(fetchNotificacoes, 30000);
-    return () => clearInterval(interval);
-  }, [fetchNotificacoes]);
+    return () => {
+      scope.active = false;
+      clearInterval(interval);
+    };
+  }, [isLoggedIn, userEmail]);
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
+    e.target.value = '';
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-      toast({ title: 'Apenas imagens são permitidas.', status: 'error' });
+    const error = validateAvatarFile(file);
+    if (error) {
+      toast({ title: error, status: 'warning' });
       return;
     }
 
+    setUploadingAvatar(true);
     const reader = new FileReader();
     reader.onload = async (event) => {
       const base64 = event.target.result;
       try {
-        const response = await api.post('/api/auth/avatar', { base64 });
+        const response = await api.post('/api/usuarios/avatar', { avatar: base64 });
         if (response.ok) {
-          updateUserField('avatar', base64);
-          toast({ title: 'Foto de perfil atualizada!', status: 'success' });
+          const stored = updateUserField('avatar', base64);
+          toast({ title: 'Foto de perfil atualizada!', status: stored ? 'success' : 'warning',
+            description: stored ? undefined : 'Foto salva no servidor, mas não foi possível atualizar o armazenamento deste navegador.' });
         } else {
           toast({ title: 'Erro ao atualizar foto.', status: 'error' });
         }
-      } catch (err) {
+      } catch {
         toast({ title: 'Erro de conexão.', status: 'error' });
+      } finally {
+        setUploadingAvatar(false);
       }
     };
-    reader.readAsDataURL(file);
+    const handleReadError = () => {
+      setUploadingAvatar(false);
+      toast({ title: 'Não foi possível ler a imagem. Tente novamente.', status: 'error' });
+    };
+    reader.onerror = handleReadError;
+    reader.onabort = handleReadError;
+    try {
+      reader.readAsDataURL(file);
+    } catch {
+      handleReadError();
+    }
   };
 
   const marcarLida = async (id) => {
-    await api.put(`/api/notificacoes/${id}/ler`);
-    setNotificacoes((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, lida: true } : n))
-    );
-    setNaoLidas((prev) => Math.max(0, prev - 1));
+    const scope = notificationScope.current;
+    if (!scope?.active || scope.reading.has(id) || scope.readIds.has(id)) return;
+    scope.reading.add(id);
+    try {
+      const res = await api.put(`/api/notificacoes/${id}/ler`);
+      if (!scope.active) return;
+      if (!res.ok) throw new Error('Falha ao marcar notificação');
+      scope.readIds.add(id);
+      setNotificationState((prev) => {
+        if (prev.userEmail !== userEmail) return prev;
+        const updated = prev.notificacoes.map(n => n.id === id ? { ...n, lida: true } : n);
+        return { ...prev, notificacoes: updated, naoLidas: updated.filter(n => !n.lida).length };
+      });
+    } catch {
+      if (scope.active) toast({ title: 'Não foi possível marcar a notificação como lida.', status: 'error' });
+    } finally {
+      scope.reading.delete(id);
+    }
   };
 
   const navLinks = [
@@ -103,7 +152,7 @@ export default function Navbar() {
   ];
 
   return (
-    <Box bg={bg} px={8} borderBottom="1px solid" borderColor={borderColor} boxShadow={navShadow}
+    <Box bg={bg} px={{ base: 3, md: 8 }} borderBottom="1px solid" borderColor={borderColor} boxShadow={navShadow}
       backdropFilter="blur(12px)" position="sticky" top={0} zIndex={100} w="100%" transition="all 0.3s">
       <Flex h={16} alignItems="center" justifyContent="space-between" maxW="7xl" mx="auto">
 
@@ -138,7 +187,20 @@ export default function Navbar() {
         </HStack>
 
 
-        <HStack spacing={4}>
+        <HStack spacing={{ base: 1, md: 4 }}>
+          <Box display={{ base: 'block', md: 'none' }}>
+            <Menu>
+              <MenuButton as={IconButton} aria-label="Abrir navegação" icon={<FaBars />} size="sm" variant="ghost" />
+              <MenuList bg={cardBg} borderColor={borderColor}>
+                {navLinks.map(item => (
+                  <MenuItem as={RouterLink} to={item.to} key={item.to} bg={cardBg}
+                    aria-current={location.pathname === item.to ? 'page' : undefined}>
+                    {item.label}
+                  </MenuItem>
+                ))}
+              </MenuList>
+            </Menu>
+          </Box>
           <IconButton aria-label="Alternar tema"
             icon={colorMode === 'light' ? <FaMoon size={14} /> : <FaSun size={14} color="#FBBF24" />}
             onClick={toggleColorMode} variant="ghost" size="sm" isRound 
@@ -150,7 +212,7 @@ export default function Navbar() {
                 onClick={() => openAuthModal('login')}>
                 Entrar
               </Button>
-              <Button onClick={() => openAuthModal('register')} size="sm" variant="gradient" px={6} py={4}>
+              <Button onClick={() => openAuthModal('register')} size="sm" variant="gradient" px={{ base: 3, md: 6 }} py={4}>
                 Cadastrar
               </Button>
             </>
@@ -178,7 +240,7 @@ export default function Navbar() {
                     )}
                   </Box>
                 </PopoverTrigger>
-                <PopoverContent w="320px" shadow="lg" border="1px solid"
+                <PopoverContent w="320px" maxW="calc(100vw - 24px)" shadow="lg" border="1px solid"
                   borderColor={borderColor}
                   bg={bg}>
                   <PopoverBody p={0}>
@@ -194,7 +256,7 @@ export default function Navbar() {
                           <Text fontSize="sm" color={textMuted}>Nenhuma notificação.</Text>
                         </Box>
                       ) : (
-                        notificacoes.slice(0, 10).map((n, idx) => (
+                        notificacoes.map((n, idx) => (
                           <Box key={n.id}>
                             <Box
                               px={4} py={3} cursor={!n.lida ? 'pointer' : 'default'}
@@ -242,7 +304,7 @@ export default function Navbar() {
               )}
 
               {/* menu do usuario */}
-              <input type="file" accept="image/*" ref={fileInputRef} style={{ display: 'none' }} onChange={handleAvatarChange} />
+              <input type="file" accept={AVATAR_ACCEPT} disabled={uploadingAvatar} ref={fileInputRef} style={{ display: 'none' }} onChange={handleAvatarChange} />
               <Menu>
                 <MenuButton>
                   <Avatar size="sm" src={user?.avatar} name={user?.nome || 'Usuário'} bg="brand.blue"

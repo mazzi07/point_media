@@ -8,19 +8,25 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.HttpHeaders;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Pattern;
+import java.nio.charset.StandardCharsets;
 
 import org.springframework.beans.factory.annotation.Value;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+
+    private static final Pattern EMAIL_PATTERN = Pattern.compile(
+            "^[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*"
+            + "@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?"
+            + "(?:\\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$");
 
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
@@ -38,20 +44,17 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody Map<String, String> request) {
+    public ResponseEntity<?> register(@RequestBody Map<String, Object> request) {
+        String erro = validarCredenciais(request);
+        if (erro != null) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", erro));
+        }
+        if (!(request.get("nome") instanceof String nome) || nome.isBlank() || nome.length() > 255) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Informe um nome de até 255 caracteres."));
+        }
         try {
-            String nome = request.get("nome");
-            String email = request.get("email");
-            String senha = request.get("senha");
-            String tipoUsuarioStr = request.get("tipo_usuario");
-
-            if (nome == null || nome.isBlank() ||
-                email == null || email.isBlank() ||
-                senha == null || senha.isBlank() ||
-                tipoUsuarioStr == null) {
-                return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "message", "Todos os campos são obrigatórios."));
-            }
+            String email = (String) request.get("email");
+            String senha = (String) request.get("senha");
 
             if (senha.length() < 6) {
                 return ResponseEntity.badRequest()
@@ -63,7 +66,8 @@ public class AuthController {
                     .body(Map.of("success", false, "message", "E-mail já está em uso."));
             }
 
-            TipoUsuario tipoUsuario = TipoUsuario.valueOf(tipoUsuarioStr.toUpperCase());
+            // O cadastro público nunca pode promover uma conta por dados do cliente.
+            TipoUsuario tipoUsuario = TipoUsuario.CANDIDATO;
             String senhaHash = passwordEncoder.encode(senha);
 
             Usuario novoUsuario = new Usuario(nome, email, senhaHash, tipoUsuario);
@@ -82,7 +86,7 @@ public class AuthController {
             userInfo.put("avatar", novoUsuario.getAvatar());
             response.put("usuario", userInfo);
 
-            boolean lembrarMe = request.containsKey("lembrar_me") && Boolean.parseBoolean(request.get("lembrar_me").toString());
+            boolean lembrarMe = Boolean.parseBoolean(String.valueOf(request.get("lembrar_me")));
             int maxAge = lembrarMe ? (7 * 24 * 60 * 60) : -1;
 
             ResponseCookie jwtCookie = ResponseCookie.from("pm_token", token)
@@ -97,9 +101,6 @@ public class AuthController {
                 .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
                 .body(response);
 
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest()
-                .body(Map.of("success", false, "message", "Tipo de usuário inválido."));
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
                 .body(Map.of("success", false, "message", "Erro ao registrar usuário."));
@@ -107,14 +108,13 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> request) {
-        String email = request.get("email");
-        String senha = request.get("senha");
-
-        if (email == null || email.isBlank() || senha == null || senha.isBlank()) {
-            return ResponseEntity.badRequest()
-                .body(Map.of("success", false, "message", "E-mail e senha são obrigatórios."));
+    public ResponseEntity<?> login(@RequestBody Map<String, Object> request) {
+        String erro = validarCredenciais(request);
+        if (erro != null) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", erro));
         }
+        String email = (String) request.get("email");
+        String senha = (String) request.get("senha");
 
         Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
 
@@ -136,7 +136,7 @@ public class AuthController {
         userInfo.put("avatar", usuario.getAvatar());
         response.put("usuario", userInfo);
 
-        boolean lembrarMe = request.containsKey("lembrar_me") && Boolean.parseBoolean(request.get("lembrar_me").toString());
+        boolean lembrarMe = Boolean.parseBoolean(String.valueOf(request.get("lembrar_me")));
         int maxAge = lembrarMe ? (7 * 24 * 60 * 60) : -1;
 
         ResponseCookie jwtCookie = ResponseCookie.from("pm_token", token)
@@ -152,25 +152,24 @@ public class AuthController {
             .body(response);
     }
 
-    @PostMapping("/avatar")
-    public ResponseEntity<?> updateAvatar(@RequestBody Map<String, String> request) {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
-        
-        if (usuarioOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    private String validarCredenciais(Map<String, Object> request) {
+        if (!(request.get("email") instanceof String email) || email.isBlank()
+                || !(request.get("senha") instanceof String senha) || senha.isBlank()) {
+            return "E-mail e senha devem ser textos não vazios.";
         }
-
-        String base64Image = request.get("avatar");
-        if (base64Image == null || base64Image.isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Imagem inválida."));
+        if (email.length() > 254 || !EMAIL_PATTERN.matcher(email).matches() || email.indexOf('@') > 64) {
+            return "Informe um e-mail válido.";
         }
-
-        Usuario usuario = usuarioOpt.get();
-        usuario.setAvatar(base64Image);
-        usuarioRepository.save(usuario);
-
-        return ResponseEntity.ok(Map.of("success", true, "message", "Avatar atualizado com sucesso."));
+        // BCrypt limita a senha em bytes, não em caracteres; não a truncamos.
+        if (senha.getBytes(StandardCharsets.UTF_8).length > 72) {
+            return "A senha deve ter no máximo 72 bytes em UTF-8.";
+        }
+        Object lembrarMe = request.get("lembrar_me");
+        if (request.containsKey("lembrar_me") && !(lembrarMe instanceof Boolean)
+                && !"true".equals(lembrarMe) && !"false".equals(lembrarMe)) {
+            return "lembrar_me deve ser um booleano.";
+        }
+        return null;
     }
 
     @PostMapping("/logout")

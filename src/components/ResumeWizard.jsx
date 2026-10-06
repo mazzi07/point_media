@@ -7,7 +7,7 @@ import {
 import { FaCheck } from 'react-icons/fa';
 import AiMentorPanel from './AiMentorPanel';
 import { api } from '../services/api';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { useNavigate } from 'react-router-dom';
 
 import StepBasicInfo from './wizard/StepBasicInfo';
@@ -15,16 +15,18 @@ import StepExperience from './wizard/StepExperience';
 import StepSkills from './wizard/StepSkills';
 import StepReview from './wizard/StepReview';
 import ResumePDFTemplate from './ResumePDFTemplate';
-import html2pdf from 'html2pdf.js';
+import { useQueryClient } from '@tanstack/react-query';
+import { generateResumePdf } from '../utils/resumePdf';
 
 export default function ResumeWizard() {
   const [currentStep, setCurrentStep] = useState(0);
   const steps = ['Dados Básicos', 'Experiência', 'Habilidades', 'Revisão'];
 
   const toast = useToast();
+  const queryClient = useQueryClient();
   const { user, setHasResume } = useAuth();
 
-  // dados do curriculo
+
   const [curriculo, setCurriculo] = useState({
     cargo: '',
     experiencia: '',
@@ -35,40 +37,51 @@ export default function ResumeWizard() {
   const [skillInput, setSkillInput] = useState('');
 
   const [loadingData, setLoadingData] = useState(true);
+  const [resumeExists, setResumeExists] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [saving, setSaving] = useState(false);
 
-  // carrega curriculo existente do banco
+
   useEffect(() => {
+    let active = true;
     api.get('/api/curriculo')
       .then(async (res) => {
-        if (res.ok) {
-          const data = await res.json();
-          setCurriculo({
-            cargo: data.cargo || '',
-            experiencia: data.experiencia || '',
-            linkedin: data.linkedin || '',
-            github: data.github || '',
-          });
-          setHabilidades(data.habilidades || []);
-        }
+        if (res.status === 404) return;
+        if (!res.ok) throw new Error('Falha ao carregar currículo');
+        const data = await res.json();
+        if (!active) return;
+        setCurriculo({
+          cargo: data.cargo || '',
+          experiencia: data.experiencia || '',
+          linkedin: data.linkedin || '',
+          github: data.github || '',
+        });
+        setHabilidades(data.habilidades || []);
+        setResumeExists(true);
       })
-      .catch(() => {})
-      .finally(() => setLoadingData(false));
-  }, []);
+      .catch(() => { if (active) setLoadError(true); })
+      .finally(() => { if (active) setLoadingData(false); });
+    return () => { active = false; };
+  }, [loadAttempt]);
+
+  const retryLoad = () => {
+    setLoadError(false);
+    setLoadingData(true);
+    setLoadAttempt(prev => prev + 1);
+  };
 
   const handleChange = (field) => (e) =>
     setCurriculo((prev) => ({ ...prev, [field]: e.target.value }));
 
   const handleNextStep = () => {
-    // valida passo 0
     if (currentStep === 0) {
-      if (!user?.hasCurriculo && (!curriculo.linkedin.trim() || !curriculo.github.trim())) {
+      if (!resumeExists && (!curriculo.linkedin.trim() || !curriculo.github.trim())) {
         setIsAlertOpen(true);
         return;
       }
     }
 
-    // valida passo 1
     if (currentStep === 1) {
       if (!curriculo.cargo.trim() || !curriculo.experiencia.trim()) {
         toast({ title: 'Campos Obrigatórios', description: 'Por favor, preencha Cargo e Experiência.', status: 'warning', duration: 4000, position: 'top' });
@@ -76,7 +89,6 @@ export default function ResumeWizard() {
       }
     }
 
-    // valida passo 2
     if (currentStep === 2 && habilidades.length === 0) {
       toast({ title: 'Habilidades', description: 'Adicione pelo menos uma habilidade.', status: 'warning', duration: 4000, position: 'top' });
       return;
@@ -87,14 +99,14 @@ export default function ResumeWizard() {
 
   const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 0));
 
-  const addSkill = (e) => {
-    if ((e.key === 'Enter' || e.type === 'click') && skillInput.trim()) {
-      e.preventDefault();
-      if (!habilidades.includes(skillInput.trim())) {
-        setHabilidades((prev) => [...prev, skillInput.trim()]);
-      }
-      setSkillInput('');
+  const addSkill = (value) => {
+    const skill = value?.trim();
+    if (!skill) return;
+
+    if (!habilidades.includes(skill)) {
+      setHabilidades((prev) => [...prev, skill]);
     }
+    setSkillInput('');
   };
 
   const removeSkill = (s) => setHabilidades((prev) => prev.filter((h) => h !== s));
@@ -120,6 +132,7 @@ export default function ResumeWizard() {
   };
 
   const handleSave = async () => {
+    if (loadingData || loadError) return;
     setSaving(true);
     try {
       const response = await api.post('/api/curriculo', {
@@ -130,6 +143,9 @@ export default function ResumeWizard() {
 
       if (response.ok && data.success) {
         setHasResume(true);
+        queryClient.invalidateQueries({ queryKey: ['meu-curriculo'] });
+        queryClient.invalidateQueries({ queryKey: ['candidatos'] });
+        queryClient.invalidateQueries({ queryKey: ['admin_stats'] });
         setIsSuccessModalOpen(true);
       } else {
         toast({
@@ -159,24 +175,38 @@ export default function ResumeWizard() {
 
   const handleDownloadPDF = () => {
     setIsGeneratingPdf(true);
-    setTimeout(() => {
-      const element = document.getElementById('wizard-pdf-template');
-      const opt = {
-        margin:       10,
-        filename:     `curriculo_${user?.nome.replace(/\s+/g, '_').toLowerCase()}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      };
-
-      html2pdf().set(opt).from(element).save().then(() => {
+    setTimeout(async () => {
+      try {
+        const element = document.getElementById('wizard-pdf-template');
+        if (!element) throw new Error('Modelo de PDF indisponível');
+        const filename = `curriculo_${user?.nome.replace(/\s+/g, '_').toLowerCase()}.pdf`;
+        await generateResumePdf(element, filename);
+      } catch {
+        toast({ title: 'Não foi possível gerar o PDF.', description: 'Tente novamente.', status: 'error', isClosable: true });
+      } finally {
         setIsGeneratingPdf(false);
-      });
+      }
     }, 100);
   };
 
   const borderColor = useColorModeValue('gray.200', 'whiteAlpha.100');
   const cardBg = useColorModeValue('white', 'brand.cardBg');
+  const headingColor = useColorModeValue('gray.900', 'white');
+  const mutedTextColor = useColorModeValue('gray.500', 'gray.400');
+  const stepLineBg = useColorModeValue('gray.200', 'gray.700');
+  const inactiveStepBg = useColorModeValue('gray.200', 'whiteAlpha.200');
+  const inactiveStepColor = useColorModeValue('gray.400', 'gray.500');
+  const activeStepLabelColor = useColorModeValue('gray.800', 'white');
+  const dialogTextColor = useColorModeValue('gray.600', 'gray.300');
+
+  if (loadError) {
+    return (
+      <Flex minH="60vh" align="center" justify="center" direction="column" gap={4}>
+        <Text>Não foi possível carregar seu currículo. Seus dados não foram alterados.</Text>
+        <Button onClick={retryLoad}>Tentar novamente</Button>
+      </Flex>
+    );
+  }
 
   if (loadingData) {
     return (
@@ -186,7 +216,6 @@ export default function ResumeWizard() {
     );
   }
 
-  // mostra o conteudo do passo atual
   const renderStepContent = () => {
     switch (currentStep) {
       case 0:
@@ -210,10 +239,10 @@ export default function ResumeWizard() {
         <Text fontSize="xs" fontWeight="600" textTransform="uppercase" letterSpacing="0.1em" color="brand.blue" mb={2}>
           Currículo
         </Text>
-        <Heading size="lg" color={useColorModeValue('gray.900', 'white')} mb={1}>
+        <Heading size="lg" color={headingColor} mb={1}>
           {user?.nome || 'Seu perfil'}
         </Heading>
-        <Text color={useColorModeValue('gray.500', 'gray.400')} fontSize="sm">
+        <Text color={mutedTextColor} fontSize="sm">
           Preencha as etapas abaixo. Suas informações são salvas ao finalizar.
         </Text>
       </Box>
@@ -229,16 +258,16 @@ export default function ResumeWizard() {
             <Flex key={label} flex={1} direction="column" align="center" position="relative">
               {idx > 0 && (
                 <Box position="absolute" top="12px" left={0} right="50%" h="2px"
-                  bg={activeLine ? 'brand.pink' : useColorModeValue('gray.200', 'gray.700')} />
+                  bg={activeLine ? 'brand.pink' : stepLineBg} />
               )}
               {idx < steps.length - 1 && (
                 <Box position="absolute" top="12px" left="50%" right={0} h="2px"
-                  bg={isCompleted ? 'brand.pink' : useColorModeValue('gray.200', 'gray.700')} />
+                  bg={isCompleted ? 'brand.pink' : stepLineBg} />
               )}
               <Flex
                 w={6} h={6} align="center" justify="center" borderRadius="full" zIndex={1} mb={2}
-                bg={isActive || isCompleted ? 'brand.pink' : useColorModeValue('gray.200', 'whiteAlpha.200')}
-                color={isActive || isCompleted ? 'white' : useColorModeValue('gray.400', 'gray.500')}
+                bg={isActive || isCompleted ? 'brand.pink' : inactiveStepBg}
+                color={isActive || isCompleted ? 'white' : inactiveStepColor}
                 fontSize="xs" fontWeight="600"
               >
                 {isCompleted ? <Icon as={FaCheck} w={3} h={3} /> : idx + 1}
@@ -246,7 +275,7 @@ export default function ResumeWizard() {
               <Text
                 fontSize="xs"
                 fontWeight={isActive ? '600' : '400'}
-                color={isActive ? useColorModeValue('gray.800', 'white') : useColorModeValue('gray.400', 'gray.500')}
+                color={isActive ? activeStepLabelColor : inactiveStepColor}
                 textAlign="center"
               >
                 {label}
@@ -261,13 +290,13 @@ export default function ResumeWizard() {
         <GridItem>
           <Box bg={cardBg} p={{ base: 6, md: 8 }} rounded="lg" border="1px solid" borderColor={borderColor}>
             
-            {/* conteudo do passo */}
+
             {renderStepContent()}
 
 
             <Flex mt={8} justify="space-between" pt={5} borderTop="1px solid" borderColor={borderColor}>
               <Button onClick={prevStep} isDisabled={currentStep === 0} variant="ghost" size="sm"
-                fontWeight="400" color={useColorModeValue('gray.500', 'gray.400')}>
+                fontWeight="400" color={mutedTextColor}>
                 Voltar
               </Button>
               {currentStep < steps.length - 1 ? (
@@ -299,17 +328,17 @@ export default function ResumeWizard() {
       >
         <AlertDialogOverlay backdropFilter="blur(4px)" />
         <AlertDialogContent bg={cardBg} border="1px solid" borderColor={borderColor}>
-          <AlertDialogHeader fontSize="lg" fontWeight="bold" color={useColorModeValue('gray.900', 'white')}>
+          <AlertDialogHeader fontSize="lg" fontWeight="bold" color={headingColor}>
             Campos Opcionais em Branco
           </AlertDialogHeader>
 
-          <AlertDialogBody color={useColorModeValue('gray.600', 'gray.300')}>
+          <AlertDialogBody color={dialogTextColor}>
             Você não preencheu o <strong>LinkedIn</strong> e/ou <strong>GitHub</strong>. 
             Isso pode diminuir suas chances de destaque entre os recrutadores. Tem certeza de que deseja continuar sem eles?
           </AlertDialogBody>
 
           <AlertDialogFooter>
-            <Button ref={cancelRef} onClick={() => setIsAlertOpen(false)} variant="ghost" color={useColorModeValue('gray.600', 'gray.300')}>
+            <Button ref={cancelRef} onClick={() => setIsAlertOpen(false)} variant="ghost" color={dialogTextColor}>
               Voltar e Preencher
             </Button>
             <Button variant="gradient" onClick={() => { setIsAlertOpen(false); setCurrentStep(1); }} ml={3}>
@@ -328,12 +357,12 @@ export default function ResumeWizard() {
       >
         <AlertDialogOverlay backdropFilter="blur(4px)" />
         <AlertDialogContent bg={cardBg} border="1px solid" borderColor={borderColor}>
-          <AlertDialogHeader fontSize="lg" fontWeight="bold" color={useColorModeValue('gray.900', 'white')}>
+          <AlertDialogHeader fontSize="lg" fontWeight="bold" color={headingColor}>
             🎉 Currículo Salvo com Sucesso!
           </AlertDialogHeader>
 
-          <AlertDialogBody color={useColorModeValue('gray.600', 'gray.300')}>
-            Seu currículo foi atualizado e agora você está visível para oportunidades.
+          <AlertDialogBody color={dialogTextColor}>
+            Seu currículo foi salvo. Para aparecer na lista de candidatos do RH, candidate-se a pelo menos uma vaga.
             <br/><br/>
             <strong>Deseja colocar seu conhecimento em prática agora mesmo?</strong>
             <br/>
@@ -343,7 +372,7 @@ export default function ResumeWizard() {
           </AlertDialogBody>
 
           <AlertDialogFooter>
-            <Button ref={cancelRef} onClick={() => { setIsSuccessModalOpen(false); navigate('/'); }} variant="ghost" color={useColorModeValue('gray.600', 'gray.300')}>
+            <Button ref={cancelRef} onClick={() => { setIsSuccessModalOpen(false); navigate('/'); }} variant="ghost" color={dialogTextColor}>
               Voltar ao Início
             </Button>
             <Button variant="gradient" onClick={() => { setIsSuccessModalOpen(false); navigate('/quizzes'); }} ml={3}>

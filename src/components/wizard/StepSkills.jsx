@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { VStack, Heading, HStack, Input, Button, Flex, Tag, TagLabel, TagCloseButton, Text, Box, Icon, useColorModeValue } from '@chakra-ui/react';
 import { FaPlus } from 'react-icons/fa';
 
@@ -29,6 +29,10 @@ export default function StepSkills({ habilidades, skillInput, setSkillInput, add
   const sugHoverBg = useColorModeValue('gray.100', 'whiteAlpha.100');
   const sugColor = useColorModeValue('gray.600', 'gray.300');
   const labelColor = useColorModeValue('gray.400', 'gray.500');
+  const headingColor = useColorModeValue('gray.800', 'white');
+  const suggestionBorderColor = useColorModeValue('gray.300', 'gray.600');
+  const skillTagBg = useColorModeValue('blue.50', 'whiteAlpha.100');
+  const skillTagColor = useColorModeValue('brand.blue', 'white');
 
   // Filter suggestions based on input, excluding already-added skills
   const filteredSuggestions = useMemo(() => {
@@ -43,42 +47,25 @@ export default function StepSkills({ habilidades, skillInput, setSkillInput, add
       .slice(0, 8);
   }, [skillInput, habilidades]);
 
-  const handleSuggestionClick = (skill) => {
-    if (!habilidades.includes(skill)) {
-      addSkill({ type: 'click', preventDefault: () => {} }, skill);
-    }
-  };
-
-  // Enhanced addSkill that accepts an optional skill name override
-  const handleAddSkill = (e, overrideSkill) => {
-    if (overrideSkill) {
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
       e.preventDefault();
-      if (!habilidades.includes(overrideSkill)) {
-        // We call the parent addSkill with a synthetic event
-        const syntheticEvent = { key: 'Enter', preventDefault: () => {} };
-        setSkillInput(overrideSkill);
-        // Use timeout to let state update, then trigger
-        setTimeout(() => {
-          addSkill(syntheticEvent);
-        }, 0);
-      }
-      return;
+      addSkill(skillInput);
     }
-    addSkill(e);
   };
 
   return (
     <VStack spacing={5} align="stretch">
-      <Heading size="sm" color={useColorModeValue('gray.800', 'white')}>Habilidades Técnicas</Heading>
+      <Heading size="sm" color={headingColor}>Habilidades Técnicas</Heading>
       <HStack>
         <Input
           placeholder="Ex: React, Java, Figma (Enter para adicionar)"
           focusBorderColor="brand.blue"
           value={skillInput}
           onChange={(e) => setSkillInput(e.target.value)}
-          onKeyDown={addSkill}
+          onKeyDown={handleKeyDown}
         />
-        <Button variant="gradient" onClick={addSkill} px={6} data-skill-add-btn>
+        <Button variant="gradient" onClick={() => addSkill(skillInput)} px={6}>
           Adicionar
         </Button>
       </HStack>
@@ -101,17 +88,10 @@ export default function StepSkills({ habilidades, skillInput, setSkillInput, add
                 transition="all 0.15s"
                 _hover={{ bg: sugHoverBg, color: 'brand.blue', borderColor: 'brand.blue' }}
                 border="1px dashed"
-                borderColor={useColorModeValue('gray.300', 'gray.600')}
+                borderColor={suggestionBorderColor}
                 px={3}
                 py={1}
-                onClick={() => {
-                  setSkillInput(suggestion);
-                  // Simulate click add
-                  setTimeout(() => {
-                    const btn = document.querySelector('[data-skill-add-btn]');
-                    if (btn) btn.click();
-                  }, 10);
-                }}
+                onClick={() => addSkill(suggestion)}
               >
                 <Icon as={FaPlus} w={2} h={2} mr={1} />
                 <TagLabel fontSize="xs">{suggestion}</TagLabel>
@@ -131,7 +111,7 @@ export default function StepSkills({ habilidades, skillInput, setSkillInput, add
         <Flex wrap="wrap" gap={2} minH="40px">
           {habilidades.map((skill) => (
             <Tag key={skill} size="md" rounded="full"
-              bg={useColorModeValue('blue.50', 'whiteAlpha.100')} color={useColorModeValue('brand.blue', 'white')} border="1px solid" borderColor="brand.blue" px={3}>
+              bg={skillTagBg} color={skillTagColor} border="1px solid" borderColor="brand.blue" px={3}>
               <TagLabel fontSize="sm">{skill}</TagLabel>
               <TagCloseButton onClick={() => removeSkill(skill)} />
             </Tag>

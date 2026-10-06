@@ -1,13 +1,12 @@
-import React, { useState } from 'react';
 import {
-  Box, Container, Heading, Text, Grid, Flex, Button, HStack, VStack,
-  Tag, Icon, useColorModeValue, Skeleton, SkeletonText, Tabs, TabList, TabPanels, Tab, TabPanel, Avatar, Divider, CircularProgress, CircularProgressLabel
+  Box, Container, Heading, Text, Grid, Flex, Button, HStack,
+  Icon, useColorModeValue, Skeleton, SkeletonText, Tabs, TabList, TabPanels, Tab, TabPanel, Avatar, CircularProgress
 } from '@chakra-ui/react';
-import { FaPlay, FaMedal, FaTrophy, FaStar, FaBrain, FaCode, FaChartBar } from 'react-icons/fa';
+import { FaMedal, FaTrophy, FaBrain, FaCode, FaChartBar } from 'react-icons/fa';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 
 export default function Quizzes() {
   const navigate = useNavigate();
@@ -17,10 +16,11 @@ export default function Quizzes() {
   const border = useColorModeValue('gray.200', 'whiteAlpha.100');
   const textColor = useColorModeValue('gray.600', 'gray.400');
   const headingColor = useColorModeValue('gray.900', 'white');
+  const pageBg = useColorModeValue('brand.lightBg', 'brand.darkBg');
   const rankHoverBg = useColorModeValue('gray.50', 'whiteAlpha.50');
 
   // lista de quizzes disponiveis
-  const { data: quizzes = [], isLoading: isLoadingQuizzes } = useQuery({
+  const { data: quizzes = [], isLoading: isLoadingQuizzes, isError: quizzesError, refetch: retryQuizzes } = useQuery({
     queryKey: ['quizzes'],
     queryFn: async () => {
       const res = await api.get('/api/quizzes');
@@ -30,7 +30,7 @@ export default function Quizzes() {
   });
 
   // ranking geral dos candidatos
-  const { data: ranking = [], isLoading: isLoadingRanking } = useQuery({
+  const { data: ranking = [], isLoading: isLoadingRanking, isError: rankingError, refetch: retryRanking } = useQuery({
     queryKey: ['ranking'],
     queryFn: async () => {
       const res = await api.get('/api/quizzes/ranking');
@@ -81,6 +81,8 @@ export default function Quizzes() {
                 </Text>
               </Box>
 
+              {quizzesError && <Box textAlign="center" py={6}><Text>Não foi possível carregar os quizzes.</Text><Button mt={3} onClick={() => retryQuizzes()}>Tentar novamente</Button></Box>}
+              {!isLoadingQuizzes && !quizzesError && quizzes.length === 0 && <Text textAlign="center">Nenhum quiz disponível.</Text>}
               <Grid templateColumns={{ base: '1fr', md: 'repeat(3, 1fr)' }} gap={6}>
                 {isLoadingQuizzes ? (
                   Array(3).fill(0).map((_, i) => (
@@ -90,7 +92,7 @@ export default function Quizzes() {
                       <Skeleton height="40px" />
                     </Box>
                   ))
-                ) : quizzes.map(quiz => (
+                ) : quizzesError ? null : quizzes.map(quiz => (
                   <Box key={quiz.id} bg={bgCard} p={6} borderRadius="2xl" border="1px solid" borderColor={border} 
                     transition="all 0.3s" _hover={{ transform: 'translateY(-5px)', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', borderColor: 'brand.pink' }}>
                     <Flex w={12} h={12} bg="rgba(213, 24, 123, 0.1)" color="brand.pink" borderRadius="xl" align="center" justify="center" mb={5} fontSize="xl">
@@ -136,6 +138,8 @@ export default function Quizzes() {
 
               {isLoadingRanking ? (
                 <Flex justify="center" py={20}><CircularProgress isIndeterminate color="brand.pink" /></Flex>
+              ) : rankingError ? (
+                <Box textAlign="center" py={6}><Text>Não foi possível carregar o ranking.</Text><Button mt={3} onClick={() => retryRanking()}>Tentar novamente</Button></Box>
               ) : ranking.length === 0 ? (
                 <Flex justify="center" py={12}><Text color={textColor}>Ainda não há candidatos no ranking. Seja o primeiro!</Text></Flex>
               ) : (
@@ -145,10 +149,9 @@ export default function Quizzes() {
                     {/* segundo lugar */}
                     {ranking[1] && (
                       <Box bg={bgCard} p={6} borderRadius="2xl" border="1px solid" borderColor={border} w="280px" textAlign="center" position="relative" mt={10}>
-                        <Flex position="absolute" top="-20px" left="50%" transform="translateX(-50%)" w="40px" h="40px" bg="gray.400" borderRadius="full" align="center" justify="center" color="white" fontWeight="bold" border="4px solid" borderColor="brand.bg">2</Flex>
-                        <Avatar size="xl" src={ranking[1].avatar} name={ranking[1].nome} mb={4} mt={4} border="4px solid" borderColor="gray.400" />
-                        <Heading size="md" color={headingColor}>{ranking[1].nome}</Heading>
-                        <Text fontSize="xs" color={textColor} mb={2}>@{ranking[1].email.split('@')[0]}</Text>
+                        <Flex position="absolute" top="-20px" left="50%" transform="translateX(-50%)" w="40px" h="40px" bg="gray.400" borderRadius="full" align="center" justify="center" color="white" fontWeight="bold" border="4px solid" borderColor={pageBg}>2</Flex>
+                        <Avatar size="xl" src={ranking[1].avatar} name={ranking[1].nome || 'Usuário'} mb={4} mt={4} border="4px solid" borderColor="gray.400" />
+                        <Heading size="md" color={headingColor} mb={2}>{ranking[1].nome || 'Usuário'}</Heading>
                         <Heading size="lg" color="brand.pink" mb={3}>{ranking[1].pontuacaoGeral} pts</Heading>
                       </Box>
                     )}
@@ -156,11 +159,10 @@ export default function Quizzes() {
                     {/* primeiro lugar */}
                     {ranking[0] && (
                       <Box bg={bgCard} p={8} borderRadius="2xl" border="2px solid" borderColor="brand.pink" w="320px" textAlign="center" position="relative" boxShadow="0 0 40px rgba(213, 24, 123, 0.2)" zIndex={2}>
-                        <Flex position="absolute" top="-25px" left="50%" transform="translateX(-50%)" w="50px" h="50px" bg="yellow.400" borderRadius="full" align="center" justify="center" color="gray.900" fontWeight="bold" fontSize="xl" border="4px solid" borderColor="brand.bg" boxShadow="0 0 15px rgba(236, 201, 75, 0.6)">1</Flex>
+                        <Flex position="absolute" top="-25px" left="50%" transform="translateX(-50%)" w="50px" h="50px" bg="yellow.400" borderRadius="full" align="center" justify="center" color="gray.900" fontWeight="bold" fontSize="xl" border="4px solid" borderColor={pageBg} boxShadow="0 0 15px rgba(236, 201, 75, 0.6)">1</Flex>
                         <Icon as={FaTrophy} color="yellow.400" position="absolute" top={4} right={4} fontSize="xl" />
-                        <Avatar size="2xl" src={ranking[0].avatar} name={ranking[0].nome} mb={4} mt={4} border="4px solid" borderColor="yellow.400" />
-                        <Heading size="lg" color={headingColor}>{ranking[0].nome}</Heading>
-                        <Text fontSize="sm" color={textColor} mb={2}>@{ranking[0].email.split('@')[0]}</Text>
+                        <Avatar size="2xl" src={ranking[0].avatar} name={ranking[0].nome || 'Usuário'} mb={4} mt={4} border="4px solid" borderColor="yellow.400" />
+                        <Heading size="lg" color={headingColor} mb={2}>{ranking[0].nome || 'Usuário'}</Heading>
                         <Heading size="xl" bgGradient="linear(to-r, brand.pink, brand.blue)" bgClip="text" mb={3}>{ranking[0].pontuacaoGeral} pts</Heading>
                       </Box>
                     )}
@@ -168,10 +170,9 @@ export default function Quizzes() {
                     {/* terceiro lugar */}
                     {ranking[2] && (
                       <Box bg={bgCard} p={6} borderRadius="2xl" border="1px solid" borderColor={border} w="280px" textAlign="center" position="relative" mt={10}>
-                        <Flex position="absolute" top="-20px" left="50%" transform="translateX(-50%)" w="40px" h="40px" bg="orange.400" borderRadius="full" align="center" justify="center" color="white" fontWeight="bold" border="4px solid" borderColor="brand.bg">3</Flex>
-                        <Avatar size="xl" src={ranking[2].avatar} name={ranking[2].nome} mb={4} mt={4} border="4px solid" borderColor="orange.400" />
-                        <Heading size="md" color={headingColor}>{ranking[2].nome}</Heading>
-                        <Text fontSize="xs" color={textColor} mb={2}>@{ranking[2].email.split('@')[0]}</Text>
+                        <Flex position="absolute" top="-20px" left="50%" transform="translateX(-50%)" w="40px" h="40px" bg="orange.400" borderRadius="full" align="center" justify="center" color="white" fontWeight="bold" border="4px solid" borderColor={pageBg}>3</Flex>
+                        <Avatar size="xl" src={ranking[2].avatar} name={ranking[2].nome || 'Usuário'} mb={4} mt={4} border="4px solid" borderColor="orange.400" />
+                        <Heading size="md" color={headingColor} mb={2}>{ranking[2].nome || 'Usuário'}</Heading>
                         <Heading size="lg" color="brand.pink" mb={3}>{ranking[2].pontuacaoGeral} pts</Heading>
                       </Box>
                     )}
@@ -192,10 +193,9 @@ export default function Quizzes() {
                         <Flex key={cand.usuarioId} p={4} align="center" borderBottom="1px solid" borderColor={border} _last={{ borderBottom: 'none' }} _hover={{ bg: rankHoverBg }}>
                           <Box flex="1" maxW="80px" textAlign="center" fontWeight="bold" color={textColor}>{index + 4}</Box>
                           <Flex flex="3" align="center" gap={3}>
-                            <Avatar size="sm" src={cand.avatar} name={cand.nome} />
+                            <Avatar size="sm" src={cand.avatar} name={cand.nome || 'Usuário'} />
                             <Box>
-                              <Text fontWeight="600" color={headingColor} fontSize="sm">{cand.nome}</Text>
-                              <Text fontSize="xs" color={textColor}>@{cand.email.split('@')[0]}</Text>
+                              <Text fontWeight="600" color={headingColor} fontSize="sm">{cand.nome || 'Usuário'}</Text>
                             </Box>
                           </Flex>
                           <Box flex="2" textAlign="center" display={{ base: 'none', md: 'block' }} color={textColor} fontSize="sm">{cand.quizzesRealizados}</Box>

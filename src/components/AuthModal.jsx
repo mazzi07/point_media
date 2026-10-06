@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Modal, ModalOverlay, ModalContent, ModalBody, ModalCloseButton,
   Box, Flex, VStack, Heading, Text, Input, Button, Link,
@@ -7,8 +7,8 @@ import {
   IconButton
 } from '@chakra-ui/react';
 import pointLogo from '../assets/point.png';
-import { FaEnvelope, FaLock, FaUser, FaBriefcase, FaStar, FaMagic, FaCheckCircle, FaChartLine, FaEye, FaEyeSlash } from 'react-icons/fa';
-import { useAuth } from '../context/AuthContext';
+import { FaEnvelope, FaLock, FaUser, FaStar, FaMagic, FaCheckCircle, FaChartLine, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { useAuth } from '../context/useAuth';
 import { api } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -16,20 +16,17 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
 const loginSchema = z.object({
-  email: z.string().min(1, 'O e-mail é obrigatório').email('Formato de e-mail inválido'),
-  senha: z.string().min(1, 'A senha é obrigatória'),
+  email: z.string({ error: 'O e-mail é obrigatório' }).min(1, 'O e-mail é obrigatório').email('Formato de e-mail inválido'),
+  senha: z.string({ error: 'A senha é obrigatória' }).min(1, 'A senha é obrigatória'),
   lembrar_me: z.boolean().optional(),
 });
 
 const registerSchema = z.object({
-  nome: z.string().min(3, 'O nome deve ter no mínimo 3 caracteres'),
-  email: z.string().min(1, 'O e-mail é obrigatório').email('Formato de e-mail inválido'),
-  profissao: z.string().optional(),
-  senha: z.string().min(6, 'A senha deve ter no mínimo 6 caracteres'),
-  confirmarSenha: z.string().min(1, 'Confirme sua senha'),
-  aceitaTermos: z.literal(true, {
-    errorMap: () => ({ message: 'Você deve aceitar os termos de uso' }),
-  }),
+  nome: z.string({ error: 'O nome é obrigatório' }).min(3, 'O nome deve ter no mínimo 3 caracteres'),
+  email: z.string({ error: 'O e-mail é obrigatório' }).min(1, 'O e-mail é obrigatório').email('Formato de e-mail inválido'),
+
+  senha: z.string({ error: 'A senha é obrigatória' }).min(6, 'A senha deve ter no mínimo 6 caracteres'),
+  confirmarSenha: z.string({ error: 'Confirme sua senha' }).min(1, 'Confirme sua senha'),
 }).refine((data) => data.senha === data.confirmarSenha, {
   message: "As senhas não coincidem",
   path: ["confirmarSenha"],
@@ -93,9 +90,7 @@ export default function AuthModal() {
       const payload = {
         nome: data.nome,
         email: data.email,
-        senha: data.senha,
-        cargo: data.profissao,
-        tipo_usuario: 'CANDIDATO'
+        senha: data.senha
       };
       const response = await api.post('/api/auth/register', payload);
       const resData = await response.json();
@@ -231,16 +226,6 @@ export default function AuthModal() {
                   <FormErrorMessage fontSize="xs">{isLogin ? errorsLogin.email?.message : errorsSignup.email?.message}</FormErrorMessage>
                 </FormControl>
 
-                {!isLogin && (
-                  <FormControl isInvalid={errorsSignup.profissao}>
-                    <Text fontSize="sm" fontWeight="500" color="white" mb={1}>Profissão</Text>
-                    <InputGroup size="lg">
-                      <InputLeftElement pointerEvents="none"><Icon as={FaBriefcase} color="gray.500" fontSize="sm" /></InputLeftElement>
-                      <Input placeholder="Ex: Desenvolvedor Full Stack" bg="rgba(255,255,255,0.02)" border="1px solid" borderColor="whiteAlpha.200" color="white" fontSize="sm" focusBorderColor="brand.pink" {...registerSignup('profissao')} />
-                    </InputGroup>
-                    <FormErrorMessage fontSize="xs">{errorsSignup.profissao?.message}</FormErrorMessage>
-                  </FormControl>
-                )}
 
                 <FormControl isInvalid={isLogin ? errorsLogin.senha : errorsSignup.senha}>
                   <Text fontSize="sm" fontWeight="500" color="white" mb={1}>Senha</Text>
@@ -284,23 +269,10 @@ export default function AuthModal() {
                   </FormControl>
                 )}
 
-                {isLogin ? (
-                  <Flex justify="space-between" align="center" mt={2}>
+                {isLogin && (
+                  <Flex align="center" mt={2}>
                     <Checkbox colorScheme="pink" color="gray.400" size="sm" {...registerLogin('lembrar_me')}>Lembrar de mim</Checkbox>
-                    <Link color="brand.pink" fontSize="sm" _hover={{ color: 'brand.blue' }}>Esqueceu a senha?</Link>
                   </Flex>
-                ) : (
-                  <VStack align="flex-start" spacing={2} mt={2}>
-                    <FormControl isInvalid={errorsSignup.aceitaTermos}>
-                      <Checkbox colorScheme="pink" color="gray.400" size="sm" {...registerSignup('aceitaTermos')}>
-                        Eu aceito os <Text as="span" color="brand.pink">termos de uso</Text> e <Text as="span" color="brand.pink">política de privacidade</Text>
-                      </Checkbox>
-                      <FormErrorMessage fontSize="xs">{errorsSignup.aceitaTermos?.message}</FormErrorMessage>
-                    </FormControl>
-                    <Checkbox colorScheme="pink" color="gray.400" size="sm">
-                      Quero receber novidades e oportunidades por e-mail
-                    </Checkbox>
-                  </VStack>
                 )}
 
                 <Button type="submit" variant="gradient" size="lg" mt={6} isLoading={loading}>

@@ -1,5 +1,5 @@
 # Etapa 1: Build do Frontend (React + Vite)
-FROM node:20-alpine AS build-frontend
+FROM node:24-alpine AS build-frontend
 WORKDIR /app/frontend
 
 # Copiar os arquivos de dependência primeiro para aproveitar cache do Docker
@@ -37,9 +37,6 @@ WORKDIR /app
 
 # Copia apenas o JAR final
 COPY --from=build-backend /app/backend/target/*.jar app.jar
-
-# Remove o .original caso seja gerado (proteção)
-RUN rm -f app.jar.original || true
 
 # Configura as variáveis de ambiente necessárias
 ENV PORT=${PORT:-8080}

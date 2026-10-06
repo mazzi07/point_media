@@ -7,6 +7,8 @@ import com.pointmedia.auth.repository.UsuarioRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -14,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.nio.charset.StandardCharsets;
 
 @RestController
 public class NotificacaoController {
@@ -28,8 +31,12 @@ public class NotificacaoController {
     }
 
     private Optional<Usuario> getAuthenticatedUser() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        return usuarioRepository.findByEmail(email);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()
+                || authentication instanceof AnonymousAuthenticationToken) {
+            return Optional.empty();
+        }
+        return usuarioRepository.findByEmail(authentication.getName());
     }
 
     // GET /api/notificacoes — lista notificações do usuário logado
@@ -78,13 +85,15 @@ public class NotificacaoController {
     // POST /api/admin/notificacoes — admin envia notificação a um candidato
     @PostMapping("/api/admin/notificacoes")
     public ResponseEntity<?> enviar(@RequestBody Map<String, Object> request) {
-        Long usuarioId = Long.valueOf(request.get("usuarioId").toString());
-        String titulo   = (String) request.get("titulo");
-        String mensagem = (String) request.get("mensagem");
-
-        if (titulo == null || titulo.isBlank() || mensagem == null || mensagem.isBlank()) {
+        Long usuarioId = lerDestinatario(request.get("usuarioId"));
+        if (usuarioId == null) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Informe um usuarioId inteiro positivo."));
+        }
+        if (!(request.get("titulo") instanceof String titulo) || titulo.isBlank() || titulo.length() > 255
+                || !(request.get("mensagem") instanceof String mensagem) || mensagem.isBlank()
+                || mensagem.getBytes(StandardCharsets.UTF_8).length > 65535) {
             return ResponseEntity.badRequest()
-                .body(Map.of("success", false, "message", "Título e mensagem são obrigatórios."));
+                .body(Map.of("success", false, "message", "Informe título (até 255 caracteres) e mensagem (até 65535 bytes em UTF-8) não vazios."));
         }
 
         Optional<Usuario> destinatarioOpt = usuarioRepository.findById(usuarioId);
@@ -98,5 +107,15 @@ public class NotificacaoController {
 
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(Map.of("success", true, "message", "Notificação enviada com sucesso."));
+    }
+
+    private Long lerDestinatario(Object valor) {
+        if (!(valor instanceof Integer) && !(valor instanceof Long) && !(valor instanceof String)) return null;
+        try {
+            long id = Long.parseLong(valor.toString());
+            return id > 0 ? id : null;
+        } catch (NumberFormatException exception) {
+            return null;
+        }
     }
 }

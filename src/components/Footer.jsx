@@ -1,11 +1,9 @@
-import React from 'react';
-import { Box, Container, Flex, Text, HStack, Link, useColorModeValue, Image } from '@chakra-ui/react';
+import { Box, Container, Flex, Text, HStack, useColorModeValue, Image } from '@chakra-ui/react';
 import pointLogo from '../assets/point.png';
 
 export default function Footer() {
   const borderColor = useColorModeValue('gray.200', 'whiteAlpha.100');
   const textColor = useColorModeValue('gray.600', 'gray.400');
-  const hoverColor = useColorModeValue('brand.pink', 'white');
 
   return (
     <Box borderTop="1px solid" borderColor={borderColor} py={8} mt="auto">
@@ -30,17 +28,7 @@ export default function Footer() {
           </Text>
 
 
-          <HStack spacing={6}>
-            <Link href="#" fontSize="xs" color={textColor} _hover={{ textDecoration: 'none', color: hoverColor }}>
-              Privacidade
-            </Link>
-            <Link href="#" fontSize="xs" color={textColor} _hover={{ textDecoration: 'none', color: hoverColor }}>
-              Termos
-            </Link>
-            <Link href="#" fontSize="xs" color={textColor} _hover={{ textDecoration: 'none', color: hoverColor }}>
-              Contato
-            </Link>
-          </HStack>
+
         </Flex>
       </Container>
     </Box>

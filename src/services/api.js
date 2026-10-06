@@ -13,7 +13,7 @@ async function request(path, options = {}) {
       credentials: 'include' // manda os cookies junto na requisicao
     });
 
-    // se o servidor devolver 401, desloga o usuario
+    // 401 indica sessão ausente/expirada; 403 é falta de permissão e mantém a sessão.
     if (response.status === 401) {
       localStorage.removeItem('pm_user');
       if (path !== '/api/auth/login' && path !== '/api/auth/register') {
@@ -21,7 +21,7 @@ async function request(path, options = {}) {
       }
     }
 
-    // so retorna a response se for json
+    // Mantém o contrato json() mesmo quando o servidor responde HTML ou corpo vazio.
     const contentType = response.headers.get("content-type");
     if (contentType && contentType.indexOf("application/json") !== -1) {
       return response;
@@ -32,7 +32,7 @@ async function request(path, options = {}) {
         json: async () => ({ success: false, message: 'Servidor indisponível no momento' })
       };
     }
-  } catch (error) {
+  } catch {
     // sem conexao com o servidor
     return {
       ok: false,

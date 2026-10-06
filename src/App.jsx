@@ -1,6 +1,5 @@
-import React from 'react'
-import { Box } from '@chakra-ui/react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { Box, Heading, Text, Button } from '@chakra-ui/react'
+import { BrowserRouter, Routes, Route, Navigate, Link as RouterLink } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 const queryClient = new QueryClient();
@@ -10,12 +9,13 @@ import Footer from './components/Footer'
 import Home from './pages/Home'
 import Sobre from './pages/Sobre'
 import Vagas from './pages/Vagas'
-import CriarPerfil from './pages/CriarPerfil'
 import AdminPage from './pages/AdminPage'
+import ResumeWizard from './components/ResumeWizard'
 import Quizzes from './pages/Quizzes'
 import QuizTest from './pages/QuizTest'
 import Perfil from './pages/Perfil'
-import { AuthProvider, useAuth } from './context/AuthContext'
+import { AuthProvider } from './context/AuthContext'
+import { useAuth } from './context/useAuth'
 import AuthModal from './components/AuthModal'
 
 // rota que exige login de candidato
@@ -47,15 +47,22 @@ function App() {
               <Route path="/sobre"     element={<Sobre />} />
               <Route path="/vagas"     element={<Vagas />} />
               <Route path="/quizzes" element={<Quizzes />} />
-              <Route path="/quizzes/:id" element={<QuizTest />} />
+              <Route path="/quizzes/:id" element={<PrivateRoute><QuizTest /></PrivateRoute>} />
               <Route path="/criar-perfil" element={
-                <PrivateRoute><CriarPerfil /></PrivateRoute>
+                <PrivateRoute><ResumeWizard /></PrivateRoute>
               } />
               <Route path="/perfil" element={
                 <PrivateRoute><Perfil /></PrivateRoute>
               } />
               <Route path="/admin" element={
                 <AdminRoute><AdminPage /></AdminRoute>
+              } />
+              <Route path="*" element={
+                <Box textAlign="center" py={16} px={4}>
+                  <Heading as="h1" size="lg" mb={4}>Página não encontrada</Heading>
+                  <Text mb={6}>O endereço informado não existe.</Text>
+                  <Button as={RouterLink} to="/" variant="gradient">Voltar ao início</Button>
+                </Box>
               } />
             </Routes>
             <AuthModal />

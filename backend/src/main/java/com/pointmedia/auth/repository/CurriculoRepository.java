@@ -15,6 +15,10 @@ public interface CurriculoRepository extends JpaRepository<Curriculo, Long> {
 
     Optional<Curriculo> findByUsuario(Usuario usuario);
 
+    @Query("SELECT COUNT(DISTINCT c.usuario.id) FROM Curriculo c WHERE " +
+           "EXISTS (SELECT 1 FROM Candidatura cand WHERE cand.usuario = c.usuario)")
+    long countCandidatosComCandidatura();
+
     @Query("SELECT DISTINCT c FROM Curriculo c LEFT JOIN c.habilidades h WHERE " +
            "EXISTS (SELECT 1 FROM Candidatura cand WHERE cand.usuario = c.usuario) AND " +
            "(:cargo IS NULL OR LOWER(c.cargo) LIKE LOWER(CONCAT('%', :cargo, '%'))) AND " +
