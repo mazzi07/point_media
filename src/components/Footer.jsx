@@ -1,4 +1,3 @@
-import React from 'react';
 import { Box, Container, Flex, Text, HStack, useColorModeValue, Image } from '@chakra-ui/react';
 import pointLogo from '../assets/point.png';
 

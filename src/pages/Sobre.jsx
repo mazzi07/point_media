@@ -1,4 +1,3 @@
-import React from 'react';
 import { Box, Container, Heading, Text, Grid, Flex, Icon, useColorModeValue, Button, Tag, HStack } from '@chakra-ui/react';
 import { FaRegLightbulb, FaBullseye, FaUsers, FaPaintBrush, FaChartLine, FaCogs, FaDatabase } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';

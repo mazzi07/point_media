@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Box, Container, Heading, Text, Grid, Flex, useColorModeValue, Button, Tag, HStack, Input, InputGroup, InputLeftElement, Icon, VStack, Divider, useDisclosure, useToast } from '@chakra-ui/react';
 import { FaSearch, FaBriefcase } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';

@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import {
   Box, Heading, Text, SimpleGrid, Button, useColorModeValue,
-  Container, VStack, HStack, Icon, Flex, Tag, Grid, CircularProgress, CircularProgressLabel, Badge
+  Container, VStack, HStack, Icon, Flex, Tag, Grid, CircularProgress, Badge
 } from '@chakra-ui/react';
 import { useAuth } from '../context/useAuth';
 import { useNavigate, Navigate } from 'react-router-dom';
@@ -21,7 +21,7 @@ export default function Home() {
   const textColor = useColorModeValue('gray.600', 'gray.400');
   const headingColor = useColorModeValue('#1B254B', 'white');
   const hoverBg = useColorModeValue('white', 'whiteAlpha.50');
-  const hoverBorder = useColorModeValue('transparent', 'rgba(59, 130, 246, 0.4)'); // Azul brilhante no hover escuro
+  const hoverBorder = useColorModeValue('transparent', 'rgba(59, 130, 246, 0.4)');
   const hoverShadow = useColorModeValue('0 12px 35px rgba(0,0,0,0.07)', '0 0 20px rgba(59, 130, 246, 0.15)');
   const iconBg = useColorModeValue('gray.50', 'whiteAlpha.50');
   const iconColor = useColorModeValue('gray.400', 'gray.500');
@@ -38,9 +38,9 @@ export default function Home() {
     setResumeLoadAttempt(previous => previous + 1);
   };
 
-  // checa se o usuario ja tem curriculo
   useEffect(() => {
     if (!isLoggedIn || !userEmail) return;
+    // Ignora respostas atrasadas se a conta mudar ou o componente sair da tela.
     let active = true;
     api.get('/api/curriculo')
       .then((res) => {
@@ -88,6 +88,8 @@ export default function Home() {
     if (user?.tipo === 'ADMIN') {
       return <Navigate to="/admin" replace />;
     }
+
+    const badgesEarned = badges.filter(b => b.ganhouBadge);
 
     let resumeTitle = hasResume ? 'Currículo ativo' : 'Currículo pendente';
     let resumeDescription = hasResume
@@ -144,9 +146,9 @@ export default function Home() {
               <CircularProgress isIndeterminate color="brand.blue" size="30px" />
             ) : badgesError ? (
               <Box mb={6}><Text>Não foi possível carregar suas avaliações.</Text><Button mt={2} size="sm" onClick={() => retryBadges()}>Tentar novamente</Button></Box>
-            ) : badges.filter(b => b.ganhouBadge).length > 0 ? (
+            ) : badgesEarned.length > 0 ? (
               <HStack spacing={3} mb={6} flexWrap="wrap">
-                {badges.filter(b => b.ganhouBadge).map(b => (
+                {badgesEarned.map(b => (
                   <Tag key={b.quizId} size="lg" borderRadius="full" variant="subtle" colorScheme="blue">
                     <Icon as={FaCheckCircle} mr={2} color="blue.500" />
                     {b.titulo}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { AuthContext } from './useAuth';
 
@@ -18,12 +18,11 @@ const readStoredUser = () => {
 
 export function AuthProvider({ children }) {
   const queryClient = useQueryClient();
-  // restaura o usuário antes de verificar se há uma sessão salva válida
+  // Os dados locais restauram a interface; a API continua validando a sessão.
   const [user, setUser] = useState(readStoredUser);
   const [isLoggedIn, setIsLoggedIn] = useState(() => Boolean(localStorage.getItem(USER_KEY)));
   const [hasResume, setHasResume]   = useState(false);
 
-  // controle do modal de login/cadastro
   const [isAuthModalOpen, setAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState('login');
 
@@ -37,6 +36,7 @@ export function AuthProvider({ children }) {
   };
 
   const login = (userData) => {
+    // Evita que outra conta veja dados do cache da sessão anterior.
     queryClient.clear();
     localStorage.setItem(USER_KEY, JSON.stringify(userData));
     setHasResume(false);
@@ -45,7 +45,6 @@ export function AuthProvider({ children }) {
   };
 
   const logout = useCallback(async () => {
-    // avisa o servidor pra apagar o cookie
     try {
       await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
     } catch {
@@ -58,7 +57,6 @@ export function AuthProvider({ children }) {
     setHasResume(false);
   }, [queryClient]);
 
-  // se receber evento de 401 do api.js, desloga
   useEffect(() => {
     const handleUnauthorized = () => {
       logout();

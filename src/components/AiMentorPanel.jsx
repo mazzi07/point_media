@@ -1,4 +1,3 @@
-import React from 'react';
 import { Box, VStack, Heading, Text, Icon, useColorModeValue } from '@chakra-ui/react';
 import { FaLightbulb } from 'react-icons/fa';
 

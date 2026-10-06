@@ -1,4 +1,3 @@
-import React from 'react'
 import { Box, Heading, Text, Button } from '@chakra-ui/react'
 import { BrowserRouter, Routes, Route, Navigate, Link as RouterLink } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'

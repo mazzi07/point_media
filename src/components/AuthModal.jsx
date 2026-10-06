@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Modal, ModalOverlay, ModalContent, ModalBody, ModalCloseButton,
   Box, Flex, VStack, Heading, Text, Input, Button, Link,
@@ -7,7 +7,7 @@ import {
   IconButton
 } from '@chakra-ui/react';
 import pointLogo from '../assets/point.png';
-import { FaEnvelope, FaLock, FaUser, FaBriefcase, FaStar, FaMagic, FaCheckCircle, FaChartLine, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaEnvelope, FaLock, FaUser, FaStar, FaMagic, FaCheckCircle, FaChartLine, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useAuth } from '../context/useAuth';
 import { api } from '../services/api';
 import { useNavigate } from 'react-router-dom';

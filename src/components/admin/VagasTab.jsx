@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Flex, Heading, Button, Box, Table, Thead, Tbody, Tr, Th, Td, Badge,
   HStack, IconButton, Text, Skeleton, Modal, ModalOverlay, ModalContent,
@@ -57,9 +57,12 @@ export default function VagasTab() {
     const habArray = vagaForm.habilidades.split(',').map(s => s.trim()).filter(s => s);
     const payload = { ...vagaForm, habilidades: habArray };
     try {
-      const url = vagaForm.id ? `/api/admin/vagas/${vagaForm.id}` : '/api/admin/vagas';
-      const method = vagaForm.id ? 'PUT' : 'POST';
-      const res = await api[method.toLowerCase()](url, payload);
+      let res;
+      if (vagaForm.id) {
+        res = await api.put(`/api/admin/vagas/${vagaForm.id}`, payload);
+      } else {
+        res = await api.post('/api/admin/vagas', payload);
+      }
       const data = await res.json();
       if (res.ok && data.success) {
         toast({ title: data.message, status: 'success' });

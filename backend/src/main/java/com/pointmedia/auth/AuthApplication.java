@@ -1,7 +1,5 @@
 package com.pointmedia.auth;
 
-import com.pointmedia.auth.model.Usuario;
-import com.pointmedia.auth.model.TipoUsuario;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

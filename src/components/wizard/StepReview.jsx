@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   VStack, Heading, Box, Text, HStack, Tag, TagLabel, Divider, Icon,
   Avatar, Flex, useColorModeValue, Button

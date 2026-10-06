@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Box, Flex, Button, useColorModeValue, useColorMode, HStack, Link,
   IconButton, Image, Menu, MenuButton, MenuList, MenuItem, Avatar, Text,

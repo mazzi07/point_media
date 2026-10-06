@@ -22,6 +22,7 @@ public class ResultadoQuiz {
 
     private Integer nota;
     private Integer acertos;
+    // Preserva o percentual histórico mesmo se o número de perguntas mudar depois.
     @Column(name = "total_perguntas", nullable = false)
     private Integer totalPerguntas;
     private Integer tempoGastoSegundos;

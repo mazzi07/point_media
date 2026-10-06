@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Box, Container, Heading, Text, Flex, Button, useColorModeValue, Progress, VStack, HStack, Grid, RadioGroup, Radio, useToast, CircularProgress, CircularProgressLabel, Icon } from '@chakra-ui/react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
-import { FaClock, FaCheckCircle, FaTimesCircle, FaStar, FaTrophy } from 'react-icons/fa';
+import { FaClock, FaCheckCircle, FaStar, FaTrophy } from 'react-icons/fa';
 
 export default function QuizTest() {
   const { id } = useParams();
@@ -73,6 +73,7 @@ export default function QuizTest() {
   const handleFinalizar = useCallback(async (timeOut = false) => {
     if (!quiz) return;
     const expiredSubmission = timeOut || timeLeft === 0;
+    // Congela as respostas no fim do tempo, inclusive para uma nova tentativa de envio.
     if (expiredSubmission && !timeoutSubmission.current) {
       timeoutSubmission.current = {
         respostas: { ...respostas },

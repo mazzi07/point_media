@@ -1,171 +1,148 @@
-# Plano de Evolução — Point Media Talent Bank
+# Plano de evolução — Point Media
 
-## 1. Resumo executivo
+Consolidação após FP1–FP5. Este documento distingue a base existente das decisões de produto e validações pendentes. Não autoriza novas funcionalidades durante o Final Polish.
 
-O projeto encontra-se em um estágio funcional inicial, contando com sistema de autenticação via JWT, gestão básica de vagas, currículos, quizzes e candidaturas. O objetivo deste documento é organizar a evolução do sistema rumo a uma plataforma completa de recrutamento, com base nas observações e requisitos levantados pela equipe. 
+## 1. Base atual
 
-A estratégia consistirá em solidificar primeiro as regras de negócio centrais (prevenção de duplicatas, correto relacionamento entre candidatos e vagas) antes de focar em melhorias de interface (UX) e em novas features mais complexas (como upload de PDF, chat e moderação por IA).
+- Autenticação com JWT assinado/expirável, cookie HttpOnly/SameSite=Lax, BCrypt e autorização no servidor. Sessão ausente responde 401; falta de permissão responde 403.
+- Currículo em quatro etapas (dados básicos, experiência, habilidades e revisão), perfil, avatar validado e URLs de perfil normalizadas.
+- Exportação PDF com template próprio e tratamento de carregamento/falha.
+- Vagas com busca/filtros, CRUD administrativo, candidaturas e consulta das inscrições do usuário.
+- Lista privada do RH com candidatos que possuem **currículo e candidatura**, suas vagas e filtros; contagem sem duplicar candidatos.
+- Quizzes com validação de pertencimento pergunta/alternativa, correção sem expor o gabarito, proteção contra envios duplicados e timeout no cliente.
+- Ranking, resultados e badges derivados dos resultados; `totalPerguntas` preserva o denominador histórico e zero é tratado nos cálculos.
+- Notificações administrativas, leitura pelo usuário e proteções contra respostas atrasadas.
+- Cache com TanStack Query, invalidação entre telas, limpeza nas fronteiras de sessão, navegação mobile e estados de erro/vazio.
+- Validação de entradas, transações e restrições UNIQUE. Flyway V1–V9, Hibernate `validate` e `open-in-view=false`.
 
-## 2. Diagnóstico do projeto atual
+Não voltam ao backlog como novidades: candidatura, filtro de candidatos reais no admin, bloqueio de quiz concluído, revisão do currículo, perfil, PDF, drag and drop do avatar e exibição de senha. As validações de execução abaixo ainda precisam ser realizadas.
 
-* **Arquitetura:** React + Vite (Frontend) comunicando-se via REST API com Spring Boot (Backend). Banco de dados MySQL usando Flyway para migrações. Autenticação baseada em JWT HttpOnly.
-* **Funcionalidades encontradas (Confirmadas no código):**
-  * Cadastro e login (roles `CANDIDATO` e `ADMIN`).
-  * Wizard de criação de currículo (Dados Básicos, Experiência, Habilidades).
-  * Criação, edição e exclusão de Vagas pelo painel administrativo.
-  * Listagem e candidatura em Vagas.
-  * Realização de Quizzes (com cálculo de nota e acertos).
-  * Envio de notificações pelo administrador e listagem para o usuário.
-* **Problemas confirmados & Diferenças entre relato e código:**
-  * *Repetição indevida de quiz:* A equipe relatou isso como um bug, porém, o backend **já possui** a trava em `QuizController` (`resultadoQuizRepository.findByUsuarioAndQuiz`). Isso indica que o problema é de UX no frontend (a página permite fazer o quiz de novo, apenas falhando silenciosamente ou mostrando erro na hora do envio).
-  * *Candidaturas:* A equipe sugeriu criar a estrutura de candidaturas, mas ela **já existe** (`Candidatura.java`, `V7__add_candidaturas.sql`). O problema real é que o Admin não visualiza esses dados.
-  * *Usuário vs Candidato:* Atualmente, o painel de admin (`CandidatoController`) lista todos que possuem um currículo cadastrado, não importando se já se candidataram a uma vaga ou não.
-* **Riscos técnicos:** A lógica de "badges" (selos) é atualmente calculada sob demanda e enviada pelo backend sem armazenamento de persistência (apenas lógica baseada em >= 70% de acertos). Expansões futuras de badges precisarão de tabelas próprias.
+## 2. Removidos durante o Final Polish
 
-## 3. Mapa das entidades atuais
+### F01 — Recuperação de senha
 
-```text
-Usuarios (1) ---- (1) Curriculos (1) ---- (N) Habilidades (ElementCollection)
-    |
-    +---- (N) Candidaturas (N) ---- (1) Vagas (1) ---- (N) Habilidades (ElementCollection)
-    |
-    +---- (N) Notificacoes
-    |
-    +---- (N) Resultados_Quiz (N) ---- (1) Quizzes (1) ---- (N) Perguntas (1) ---- (N) Alternativas
-```
+Foi retirada a ação “Esqueci minha senha”: não havia tela, handler, endpoint ou fluxo de token. Uma implementação futura precisa de solicitação de recuperação, token temporário de uso único com expiração, redefinição segura, entrega por email, controle de abuso/rate limit e resposta que não revele a existência da conta.
 
-## 4. Decisões de arquitetura necessárias
+**Risco alto. Prioridade alta após o release e a base de segurança.**
 
-### Decisão 1: Definição de Candidato no Admin
-* **Problema:** Admin lista qualquer usuário com currículo como candidato.
-* **Opções:** 
-  1. Alterar enum `TipoUsuario`. 
-  2. Filtrar a exibição no backend (mostrar apenas quem tem registros na tabela `candidaturas`).
-* **Recomendação:** Opção 2. Mudar papéis de segurança é arriscado. Melhor alterar a query do admin para retornar apenas usuários com candidaturas ativas.
+### F02 — Preferência de emails de notícias/oportunidades
 
-### Decisão 2: Armazenamento e Exibição de PDF
-* **Problema:** Como converter/exportar o currículo para PDF.
-* **Opções:** 1. Geração no frontend (ex: `html2pdf`). 2. Geração no backend (ex: `iText`, `JasperReports`).
-* **Recomendação:** Geração no frontend. O currículo já é formatado via Chakra UI; gerar no frontend evita sobrecarga de servidor e criação de templates duplicados no Java.
+Foi retirado o checkbox que não era registrado, enviado nem persistido. Exige preferência persistida, adesão e opt-out, critérios de envio, integração de entrega e revisão de privacidade.
 
-### Decisão 3: Estrutura do Chat
-* **Problema:** Contato entre candidato e RH.
-* **Opções:** 1. WebSocket (Tempo Real). 2. Polling periódico. 3. Tabela de Mensagens com atualização manual ao carregar.
-* **Recomendação:** Opção 3 (Atualização Manual/Simples). Para um TCC e versão inicial, WebSocket adiciona complexidade excessiva de infraestrutura e segurança.
+**Risco médio. Prioridade baixa até definir a comunicação do produto.**
 
-## 5. Backlog priorizado
+### F03 — Vitrine pública de talentos
 
-| ID | Funcionalidade | Tipo | Prioridade | Complexidade | Dependências | Risco | Fase |
-| -- | -------------- | ---- | ---------- | ------------ | ------------ | ----- | ---- |
-| TASK-01 | Prevenir UI de refazer quiz | Regra/UX | P0 | Pequena | - | Baixo | 1 |
-| TASK-02 | Mostrar vagas da candidatura no admin | Nova Feature | P1 | Média | - | Baixo | 1 |
-| TASK-03 | Listar no admin apenas quem se candidatou | Regra de negócio | P1 | Pequena | TASK-02 | Médio | 1 |
-| TASK-04 | Mostrar candidaturas no dashboard do user | Nova Feature | P1 | Média | - | Baixo | 1 |
-| TASK-05 | Corrigir drag and drop de imagem | UX | P2 | Pequena | - | Baixo | 2 |
-| TASK-06 | Mostrar/ocultar senha no modal | UX | P2 | Pequena | - | Baixo | 2 |
-| TASK-07 | Visão geral do currículo antes de salvar | Nova Feature | P2 | Média | - | Baixo | 3 |
-| TASK-08 | Habilidades predefinidas e autocomplete | Nova Feature | P2 | Grande | - | Médio | 3 |
-| TASK-09 | Página de perfil completo | Nova Feature | P2 | Média | - | Baixo | 3 |
-| TASK-10 | Gerar e baixar currículo em PDF | Nova Feature | P3 | Média | TASK-09 | Baixo | 4 |
-| TASK-11 | Chat entre admin e candidato | Nova Feature | P3 | Grande | - | Alto | 5 |
-| TASK-12 | Moderação de campos / palavrões | Segurança | P3 | Média | - | Baixo | 6 |
-| TASK-13 | Integração IA (Sugestão de texto) | IA | Futuro | Grande | - | Alto | 7 |
+Foram retirados três cards fictícios fixos da Home que pareciam candidatos reais. Exige fonte real, regra de visibilidade pública, autorização/consentimento de exposição, endpoint com campos públicos mínimos, estados vazio/erro e critérios de seleção/ordenação.
 
-## 6. Roadmap por fases
+A lista privada de candidatos do administrador já funciona e não é essa vitrine.
 
-* **Fase 1 (Integridade e Regras Core):** Bloquear a interface de quizzes já concluídos, garantir que o admin só veja candidatos reais, e mostrar as vagas ligadas a eles.
-* **Fase 2 (UX e Ajustes):** Arrumar drag/drop da imagem de perfil e botão de revelar senha.
-* **Fase 3 (Evolução do Currículo):** Nova etapa de revisão no Wizard, autocomplete de habilidades (pills) e tela de visualização do perfil consolidado.
-* **Fase 4 (Documentos):** Implementar geração de PDF no frontend usando os dados do perfil consolidado.
-* **Fase 5 (Comunicação):** Criar a estrutura inicial de chat associada às candidaturas.
-* **Fase 6 e 7 (Moderação e IA):** Implementar bloqueios de palavras ofensivas no backend e integrações futuras com IA para melhorias textuais.
+**Risco alto pela exposição de dados pessoais. Prioridade baixa até definir produto e privacidade.**
 
-## 7. Especificação de cada tarefa
+### F04 — Termos e privacidade
 
-### TASK-01 — Prevenir UI de refazer quiz
-**Problema:** O backend já bloqueia quizzes duplicados (retorna erro 400), mas a interface (frontend) permite que o usuário inicie o teste de qualquer forma.
-**Comportamento esperado:** A listagem de quizzes (`Quizzes.jsx`) e a tela inicial (`QuizTest.jsx`) devem verificar se o usuário já tem resultado. Caso sim, desabilitar o botão e mostrar "Já realizado".
-**Prioridade:** P0
-**Frontend afetado:** `src/pages/Quizzes.jsx`, `src/pages/QuizTest.jsx`
-**Backend afetado:** Criar endpoint para o frontend consultar o status dos quizzes realizados, ou alterar listagem para incluir a informação booleana.
-**Possíveis arquivos afetados:** `QuizController.java`, `Quizzes.jsx`, `QuizTest.jsx`
-**Testes:** Verificar se o botão de iniciar o quiz desaparece. Verificar se acessar a rota `/quizzes/id` de um quiz concluído redireciona ou mostra tela de resultado.
+Foram retirados o aceite obrigatório fictício e os links inacessíveis: os documentos não estavam disponíveis e o aceite não era registrado. Publicar documentos reais e acessíveis, aprovados pelos responsáveis; decidir se é necessário armazenar aceite e sua versão e, se for, implementar o contrato frontend/backend correspondente.
 
-### TASK-02 — Mostrar vagas da candidatura no admin
-**Problema:** O administrador visualiza o candidato, mas não as vagas nas quais ele se inscreveu.
-**Comportamento esperado:** O endpoint que lista candidatos deve incluir um array com os títulos das vagas (ou objetos simplificados) usando a tabela `candidaturas`. O frontend deve exibir essas vagas em formato de tags/pills na lista do admin.
-**Prioridade:** P1
-**Frontend afetado:** `src/pages/AdminPage.jsx`
-**Backend afetado:** `CandidatoController.java`
-**Alterações de API:** Modificar `/api/admin/candidatos` para realizar o `JOIN` e popular um campo `candidaturas`.
+**Revisão obrigatória antes da publicação pública.** Não inventar conteúdo jurídico.
 
-### TASK-03 — Listar no admin apenas quem se candidatou
-**Problema:** Atualmente a plataforma lista qualquer usuário que tenha currículo como "Candidato".
-**Comportamento esperado:** O backend deve filtrar a lista retornada por `/api/admin/candidatos` garantindo que o usuário possua ao menos um registro na tabela `candidaturas`.
-**Prioridade:** P1
-**Possíveis arquivos afetados:** `CurriculoRepository.java`, `CandidatoController.java`
+### F05 — Contato
 
-### TASK-04 — Mostrar candidaturas no dashboard do user
-**Problema:** O endpoint `/api/vagas/minhas-candidaturas` existe, mas não é exibido no frontend.
-**Comportamento esperado:** A tela de perfil ou dashboard (`Home.jsx` logada) deve consumir este endpoint e listar os cards de vagas em que o usuário está inscrito.
-**Prioridade:** P1
-**Frontend afetado:** `src/pages/Home.jsx` (ou criar nova aba/componente).
+Foi retirado o link `href="#"`. Conectar a um destino real de contato/suporte quando definido. Não criar um subsistema de atendimento sem demanda de produto.
 
-### TASK-05 — Corrigir drag and drop de imagem
-**Problema:** A div atual não responde ao drop nativo.
-**Comportamento esperado:** Usar o `onDragOver` e `onDrop` do React/Chakra UI em `StepBasicInfo.jsx` para aceitar a imagem, prevenir o comportamento padrão do navegador, e acionar o reader.
-**Prioridade:** P2
-**Frontend afetado:** `src/components/wizard/StepBasicInfo.jsx`
+**Risco baixo. Implementar quando houver destino real.**
 
-### TASK-06 — Mostrar/ocultar senha no modal
-**Problema:** Campo de senha sem toggle.
-**Comportamento esperado:** Usar `InputRightElement` do Chakra UI com um ícone de olho que altera o estado do input entre `password` e `text`.
-**Prioridade:** P2
-**Frontend afetado:** `src/components/AuthModal.jsx`
+## 3. Bugs adiados, limitações e decisões pendentes
 
-*(As demais tasks seguem a mesma lógica e poderão ser detalhadas futuramente durante suas execuções)*
+| Item | Situação e encaminhamento | Momento recomendado |
+| --- | --- | --- |
+| Sincronização entre abas | Uma aba pode manter contexto React após mudança de conta/sessão em outra. Avaliar evento `storage`, BroadcastChannel ou equivalente. | Após o polish, com cenário reproduzível de troca de conta |
+| 401 atrasado de sessão anterior | Uma requisição antiga pode terminar após novo login e disparar expiração global. Desenhar identificação de sessão/requisição e teste de concorrência antes de alterar. | Seguimento de concorrência; não implementar sem reprodução e teste |
+| Resposta perdida após envio de quiz | O commit pode ter ocorrido mesmo sem resposta de rede. UNIQUE impede duplicação, mas repetir pode confundir. Avaliar consulta do resultado/UX idempotente. | Antes de ampliar o uso dos quizzes |
+| Currículo para candidatura | Hoje é possível candidatar-se sem currículo; visibilidade no admin exige currículo + candidatura. Decidir entre exigir currículo antes da inscrição ou aceitar e mostrar perfis incompletos claramente. É decisão de produto, não necessariamente bug. | Antes de evoluir o processo seletivo |
+| Timer de quiz no servidor | O timer atual no cliente serve à orientação educacional; não é à prova de adulteração. Uma avaliação formal exigiria início e prazo de tentativa controlados pelo servidor. | Somente se prazo estrito virar requisito |
+| Papéis e revogação de tokens | O filtro consulta o papel atual no banco. Se houver gestão de papéis/desativação de contas, definir quando as sessões JWT existentes deixam de valer. Não antecipar infraestrutura de revogação. | Junto da futura gestão de usuários |
+| CSRF | CORS restrito, SameSite=Lax e HttpOnly permanecem; não há contrato completo de token CSRF. Não declarar o problema resolvido. Rever cliente e servidor juntos. | Antes de produção pública real |
+| Validação MySQL | Integridade, migrações e rollback ainda carecem de execução em MySQL real durante o Final Polish. É validação de release, não evidência de novo bug. | Antes do release em banco descartável/controlado |
 
-## 8. Plano de banco de dados
-Não são necessárias migrações imediatas para a Fase 1 e 2, pois a estrutura de `candidaturas` (V7) já atende aos requisitos iniciais.
-No futuro, para a **Fase 5 (Chat)**, será necessário criar:
-* `V10__add_chat.sql`: `CREATE TABLE chats (id, candidatura_id)` e `CREATE TABLE mensagens (id, chat_id, remetente_id, texto, data)`.
-Para a **Fase 6 (Moderação)**:
-* `V10__add_filtros.sql`: Tabela para armazenar lista de palavras censuradas.
+Nenhum desses itens foi implementado em FP5. O [checklist de release](../README.md#checklist-de-release) reúne as verificações anteriores à publicação.
 
-## 9. Plano de APIs
-* **Endpoint Alterado:** `GET /api/admin/candidatos` -> Passará a retornar `{ ..., candidaturas: [{vagaId, titulo, status}] }` e listará apenas quem tem candidatura.
-* **Endpoint Novo (Futuro):** `GET /api/chat/{candidaturaId}` e `POST /api/chat/{candidaturaId}/enviar`.
-* **Endpoint Novo:** `GET /api/quizzes/meus-status` para retornar IDs de quizzes já respondidos, ou alterar `GET /api/quizzes` para injetar `isRespondido: boolean`.
+## 4. Próxima evolução funcional
 
-## 10. Plano de frontend
-* **Páginas Alteradas:** `AdminPage.jsx` (adicionar exibição das vagas), `Quizzes.jsx` e `QuizTest.jsx` (adicionar travas de estado).
-* **Componentes Novos:** `DashboardCandidato.jsx` (consumindo `/api/vagas/minhas-candidaturas`).
-* **Estado:** Será necessário gerenciar se a view atual é de arrastar (drag) no drag and drop do avatar.
+Ordem sugerida, sujeita às decisões da equipe e aos requisitos de publicação de F04.
 
-## 11. Plano de testes
-* **Fase 1:**
-  * Teste Manual: Tentar acessar a URL de um quiz já feito `/quizzes/{id}` de forma forçada.
-  * Teste Manual: Criar uma conta, preencher currículo e não se candidatar a vagas; verificar se o Admin a enxerga (não deve enxergar).
-  * Teste Manual: Fazer candidatura em duas vagas diferentes e verificar se ambas aparecem no painel do Admin e do Candidato.
+### A. Gestão administrativa de quizzes
 
-## 12. Segurança e privacidade
-* **Tokens JWT** continuarão em cookie `HttpOnly`.
-* **Uploads de Imagem** permanecerão limitados a 1MB base64. 
-* **Conteúdo Obsceno (Futuro):** Qualquer input de texto livre (`experiencia`, `cargo`, mensagens do chat) deverá passar por uma validação utilitária no backend (`CensorshipUtil`) antes do `.save()`.
+CRUD de quizzes, perguntas e alternativas, validações e estados de publicação/arquivamento. Antes, entender V9 e o snapshot dos resultados. Definir a regra de edição de quiz com histórico: **uma edição não pode mudar silenciosamente o significado de notas anteriores**. O denominador salvo não resolve sozinho mudanças de enunciado, gabarito ou identidade do quiz.
 
-## 13. Melhorias rápidas
-1. TASK-06: Adicionar botão de visualizar senha (simples mudança de UI).
-2. TASK-05: Suporte a drop zone nativa.
-3. Tratamento visual de mensagens de erro no Toast para serem mais claras.
+### B. Processo de vagas e candidaturas
 
-## 14. Funcionalidades futuras
-* Chat em tempo real e notificações via WebSocket.
-* Extração de texto de PDF (Parsing) via inteligência artificial ao fazer upload de currículo pronto.
-* Motor de correspondência candidato-vaga (Score de afinidade).
+Definir status/etapas de candidatura e arquivamento de vagas para preservar o histórico de recrutamento. Resolver a exigência de currículo descrita acima antes de mudar a listagem administrativa. Não implementar agora.
 
-## 15. Sequência de comandos futuros
-1. "Implemente a TASK-01 seguindo o plano (Prevenir UI de refazer quiz)."
-2. "Implemente a TASK-02 e a TASK-03 (Listagem de candidatos no admin)."
-3. "Implemente a TASK-04 (Dashboard do usuário com candidaturas)."
-4. "Implemente a TASK-05 e TASK-06 (Melhorias rápidas)."
-5. "Crie a migration e a estrutura de backend para o Chat."
+### C. Chat iniciado pelo RH/admin
+
+RH/admin inicia a conversa; candidato responde apenas a conversas das quais participa. Prever conversas, mensagens e estado de não lido, com autorização por participante no backend. Polling é suficiente inicialmente; WebSocket não é requisito padrão. Notificações atuais não são linhas de chat e não devem ser reutilizadas como se fossem.
+
+### D. Importação de currículo
+
+Fluxo: upload → validação de tipo/tamanho → extração de campos → **revisão/correção pelo usuário** → gravação do currículo estruturado. Nunca sobrescrever o perfil automaticamente após extrair dados. Decidir também se o arquivo original será armazenado e sob quais regras de acesso/retenção.
+
+### E. Suporte e contato
+
+Atender F05 com um destino real; ampliar apenas diante de demanda. Manter atendimento separado do chat de recrutamento.
+
+### F. Integrações externas
+
+Escolher um provedor e caso de uso real antes de criar abstrações de integração. Não desenhar adaptadores, IA ou infraestrutura para cenários hipotéticos.
+
+## 5. Evolução visual e de experiência
+
+São oportunidades futuras, sem redesenho nesta etapa:
+
+- Explicar melhor o cálculo do ranking e revisar estados com/sem badge se a equipe identificar dificuldade de entendimento.
+- Medir carregamento mobile antes de otimizar; reduzir a imagem da marca apenas preservando qualidade visual.
+- Considerar carregamento sob demanda do exportador PDF se o peso do bundle justificar.
+- Revisar favicon, exemplos e afirmações de marketing.
+- Testar o PDF de currículo com conteúdo muito longo, quebras de página e campos extensos.
+- Fazer revisão de acessibilidade, incluindo teclado, foco, rótulos e contraste.
+
+## 6. Evolução técnica proporcional
+
+### Testes de maior valor após o polish
+
+Automatizar cenários de autenticação/sessão, isolamento entre contas, cache/invalidação, unicidade de candidaturas/resultados e timeout/envio de quiz. Incluir concorrência e falhas de rede onde relevantes. Não criar testes de getters apenas para aumentar cobertura.
+
+### Banco de dados antes do release
+
+- Executar V1–V9 em banco MySQL vazio.
+- Testar atualização representativa de uma base pré-V9, com preflight de duplicados.
+- Verificar query de ranking, cascatas, UNIQUE e rollback de operações transacionais.
+- Conferir o backfill de `total_perguntas`, inclusive quizzes sem perguntas. O tamanho atual é a aproximação disponível para resultados anteriores ao snapshot.
+- Ensaiar recuperação de falha parcial de DDL em ambiente controlado; `repair` não reverte o schema.
+
+### Performance somente com medição
+
+Avaliar paginação, consultas em lote, projections e possível N+1 de candidatos quando latência/volume demonstrarem necessidade. Medir volume e custo de notificações e ranking antes de otimizar.
+
+### Onboarding
+
+Considerar Maven Wrapper apenas se instalar Maven se tornar um problema recorrente. A linha adotada para Node é 24 LTS; acompanhar suporte sem migrar frameworks por preferência.
+
+## 7. Regras para novas alterações
+
+- Manter React/Vite/Chakra/Emotion, React Router, TanStack Query, React Hook Form/Zod, html2pdf.js, Framer Motion e React Icons; Java/Spring Boot/Security/JJWT, JPA/Hibernate, Flyway/MySQL/Maven; Docker e Git/GitHub.
+- Nenhuma dependência direta de runtime foi comprovada desnecessária. Remover import sem uso não autoriza desinstalar a biblioteca.
+- Adicionar Service quando houver lógica de negócio realmente compartilhada ou transações entre controllers que o justifiquem.
+- Usar DTOs pequenos e nomeados quando o contrato ficar complexo; não criar DTO/mapper para cada endpoint trivial.
+- Organizar novos módulos na estrutura atual. Agrupar por domínio gradualmente apenas se a equipe tiver dificuldade real de localizar código.
+- Cada alteração de banco recebe nova migração Flyway. Nunca editar migração aplicada para mudar o histórico.
+- O histórico atual termina em **V9**. A próxima migração usa o próximo número de versão único livre quando for criada; não reservar várias futuras com o mesmo número. FP5 não cria migração.
+- Manter estado de servidor no TanStack Query e consistência entre query keys e invalidação.
+- Autorização no backend é obrigatória mesmo com guardas de navegação no frontend.
+- Preservar limpeza de cache entre contas, guardas de identidade, flags de cleanup e refs contra corridas; locks/snapshot do timeout; UNIQUE, `saveAndFlush`, transações e snapshot histórico.
+- Manter gabarito no servidor, validação pergunta/alternativa, BCrypt, assinatura/expiração JWT, cookies HttpOnly, `open-in-view=false`, Flyway + `validate`, EXISTS/COUNT DISTINCT e proteção contra denominador zero.
+- Preservar HashMap em respostas que aceitam valores nulos, template PDF separado e validação de caminho antes de exclusão no build.
+- Não introduzir Redux/Zustand, Axios por preferência, migração TypeScript, Lombok para esconder código, OAuth, Redis, microserviços, CQRS, outro ORM ou camadas genéricas sem necessidade concreta.
+
+## 8. Pendências externas a consolidar
+
+O TODO/backlog da equipe no **Notion ainda não foi fornecido**. Ele precisa ser cruzado com este plano técnico; nenhum conteúdo foi inventado ou incorporado em seu nome.

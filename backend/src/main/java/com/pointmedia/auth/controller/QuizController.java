@@ -15,6 +15,7 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -86,7 +87,6 @@ public class QuizController {
             p.getAlternativas().size(); // force init
         }
 
-        // monta a resposta sem mostrar qual eh a certa
         Map<String, Object> quizMap = new HashMap<>();
         quizMap.put("id", quiz.getId());
         quizMap.put("titulo", quiz.getTitulo());
@@ -101,19 +101,24 @@ public class QuizController {
         }
         quizMap.put("isRespondido", isRespondido);
 
-        quizMap.put("perguntas", quiz.getPerguntas().stream().map(p -> {
-            Map<String, Object> pMap = new HashMap<>();
-            pMap.put("id", p.getId());
-            pMap.put("texto", p.getTexto());
-            pMap.put("alternativas", p.getAlternativas().stream().map(a -> {
-                Map<String, Object> aMap = new HashMap<>();
-                aMap.put("id", a.getId());
-                aMap.put("texto", a.getTexto());
-                // nao mostra qual eh a certa pro usuario
-                return aMap;
-            }).collect(Collectors.toList()));
-            return pMap;
-        }).collect(Collectors.toList()));
+        // Envia só id e texto das alternativas; o gabarito fica no servidor.
+        List<Map<String, Object>> perguntas = new ArrayList<>();
+        for (Pergunta pergunta : quiz.getPerguntas()) {
+            Map<String, Object> perguntaDados = new HashMap<>();
+            perguntaDados.put("id", pergunta.getId());
+            perguntaDados.put("texto", pergunta.getTexto());
+
+            List<Map<String, Object>> alternativas = new ArrayList<>();
+            for (Alternativa alternativa : pergunta.getAlternativas()) {
+                Map<String, Object> alternativaDados = new HashMap<>();
+                alternativaDados.put("id", alternativa.getId());
+                alternativaDados.put("texto", alternativa.getTexto());
+                alternativas.add(alternativaDados);
+            }
+            perguntaDados.put("alternativas", alternativas);
+            perguntas.add(perguntaDados);
+        }
+        quizMap.put("perguntas", perguntas);
 
         return ResponseEntity.ok(quizMap);
     }
@@ -129,7 +134,7 @@ public class QuizController {
         Usuario usuario = usuarioOpt.get();
         Quiz quiz = quizOpt.get();
 
-        // nao deixa responder o mesmo quiz 2 vezes
+        // O UNIQUE também protege envios simultâneos que passem por esta consulta.
         if (resultadoQuizRepository.findByUsuarioAndQuiz(usuario, quiz).isPresent()) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Você já respondeu este quiz."));
         }
@@ -213,7 +218,6 @@ public class QuizController {
 
     @GetMapping("/ranking")
     public ResponseEntity<?> getRanking() {
-        // monta o ranking geral
         List<Map<String, Object>> ranking = resultadoQuizRepository.getRankingGeral().stream().map(obj -> {
             Map<String, Object> map = new HashMap<>();
             map.put("usuarioId", obj[0]);

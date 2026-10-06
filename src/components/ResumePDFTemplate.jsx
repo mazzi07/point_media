@@ -1,4 +1,3 @@
-import React from 'react';
 
 export default function ResumePDFTemplate({ user, curriculo, habilidades }) {
   const styles = {
@@ -8,7 +7,7 @@ export default function ResumePDFTemplate({ user, curriculo, habilidades }) {
       color: '#333',
       backgroundColor: '#fff',
       lineHeight: '1.6',
-      width: '800px', // Fixed width to ensure consistent A4 scaling
+      width: '800px', // Mantém a escala do PDF A4 igual em telas pequenas e grandes.
     },
     header: {
       borderBottom: '2px solid #3182ce',

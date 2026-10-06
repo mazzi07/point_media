@@ -10,6 +10,7 @@ try {
 
     $projectRoot = [System.IO.Path]::GetFullPath($PSScriptRoot)
     $staticPath = [System.IO.Path]::GetFullPath((Join-Path $projectRoot "backend\src\main\resources\static"))
+    # Confere o caminho absoluto antes de apagar arquivos recursivamente.
     if (-not $staticPath.StartsWith($projectRoot.TrimEnd('\') + '\', [System.StringComparison]::OrdinalIgnoreCase)) {
         throw "Static directory must be inside the project root."
     }

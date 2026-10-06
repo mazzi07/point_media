@@ -1,4 +1,3 @@
-import React from 'react';
 import { Box, Flex, Tag, Heading, HStack, Text, Icon, Button, useColorModeValue } from '@chakra-ui/react';
 import { FaBriefcase, FaReact, FaNodeJs, FaFigma, FaLaptopCode, FaPython, FaPalette, FaChartLine, FaAws } from 'react-icons/fa';
 

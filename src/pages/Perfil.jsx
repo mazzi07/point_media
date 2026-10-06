@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   Box, Container, Heading, Text, Flex, HStack, VStack, Tag, TagLabel,
-  Avatar, Icon, Button, Divider, SimpleGrid, Badge,
+  Avatar, Icon, Button, SimpleGrid, Badge,
   useColorModeValue, CircularProgress, Spinner, useToast
 } from '@chakra-ui/react';
 import {
@@ -33,7 +33,6 @@ export default function Perfil() {
   const sectionBg = useColorModeValue('gray.50', 'gray.700');
   const avatarBorderColor = useColorModeValue('white', 'gray.700');
 
-  // Fetch resume data
   const { data: curriculo, isLoading: isLoadingCurriculo, isError: curriculoError, refetch: retryCurriculo } = useQuery({
     queryKey: ['meu-curriculo'],
     queryFn: async () => {
@@ -45,7 +44,6 @@ export default function Perfil() {
     enabled: isLoggedIn,
   });
 
-  // Fetch badges
   const { data: badges = [], isLoading: isLoadingBadges, isError: badgesError, refetch: retryBadges } = useQuery({
     queryKey: ['meus-badges'],
     queryFn: async () => {
@@ -56,7 +54,6 @@ export default function Perfil() {
     enabled: isLoggedIn,
   });
 
-  // Fetch candidaturas
   const { data: candidaturas = [], isLoading: isLoadingCandidaturas, isError: candidaturasError, refetch: retryCandidaturas } = useQuery({
     queryKey: ['minhas-candidaturas'],
     queryFn: async () => {

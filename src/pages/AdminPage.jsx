@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Box, Container, Heading, Text, Flex, useColorModeValue,
   Icon, SimpleGrid, Tabs, TabList, TabPanels, Tab, TabPanel, Button, Spinner

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { VStack, Heading, HStack, Input, Button, Flex, Tag, TagLabel, TagCloseButton, Text, Box, Icon, useColorModeValue } from '@chakra-ui/react';
 import { FaPlus } from 'react-icons/fa';
 

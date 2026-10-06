@@ -1,4 +1,3 @@
-import React from 'react';
 import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalFooter, ModalCloseButton, Button, Tag, Icon, Box, Text, HStack, Heading, useColorModeValue } from '@chakra-ui/react';
 import { FaBriefcase } from 'react-icons/fa';
 

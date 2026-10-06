@@ -1,9 +1,8 @@
-import React from 'react';
 import {
-  Box, Container, Heading, Text, Grid, Flex, Button, HStack, VStack,
-  Tag, Icon, useColorModeValue, Skeleton, SkeletonText, Tabs, TabList, TabPanels, Tab, TabPanel, Avatar, Divider, CircularProgress, CircularProgressLabel
+  Box, Container, Heading, Text, Grid, Flex, Button, HStack,
+  Icon, useColorModeValue, Skeleton, SkeletonText, Tabs, TabList, TabPanels, Tab, TabPanel, Avatar, CircularProgress
 } from '@chakra-ui/react';
-import { FaPlay, FaMedal, FaTrophy, FaStar, FaBrain, FaCode, FaChartBar } from 'react-icons/fa';
+import { FaMedal, FaTrophy, FaBrain, FaCode, FaChartBar } from 'react-icons/fa';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
