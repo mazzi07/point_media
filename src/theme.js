@@ -31,6 +31,11 @@ const styles = {
     '::placeholder': {
       color: props.colorMode === 'dark' ? 'whiteAlpha.400' : 'gray.400',
     },
+    '.dark-modal input:-webkit-autofill, .dark-modal input:-webkit-autofill:hover, .dark-modal input:-webkit-autofill:focus, .dark-modal input:-webkit-autofill:active': {
+      WebkitBoxShadow: '0 0 0 30px #18181B inset !important',
+      WebkitTextFillColor: 'white !important',
+      transition: 'background-color 5000s ease-in-out 0s',
+    }
   }),
 };
 

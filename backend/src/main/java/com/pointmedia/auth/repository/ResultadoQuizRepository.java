@@ -18,6 +18,6 @@ public interface ResultadoQuizRepository extends JpaRepository<ResultadoQuiz, Lo
            "r.usuario.avatar as avatar, SUM(r.nota) as pontuacaoGeral, COUNT(r.id) as quizzesRealizados, " +
            "AVG(CASE WHEN r.totalPerguntas = 0 THEN 0.0 " +
            "ELSE 100.0 * r.acertos / r.totalPerguntas END) as mediaAcertos " +
-           "FROM ResultadoQuiz r GROUP BY r.usuario.id ORDER BY mediaAcertos DESC, pontuacaoGeral DESC")
+           "FROM ResultadoQuiz r WHERE r.usuario.tipoUsuario = com.pointmedia.auth.model.TipoUsuario.CANDIDATO GROUP BY r.usuario.id ORDER BY mediaAcertos DESC, pontuacaoGeral DESC")
     List<Object[]> getRankingGeral();
 }

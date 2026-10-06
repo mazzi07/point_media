@@ -275,7 +275,7 @@ export default function Vagas() {
         vaga={selectedVaga}
         isApplied={minhasCandidaturas.some(c => c.vagaId === selectedVaga?.id)}
         isApplying={isApplying}
-        applicationStatusUnavailable={candidaturasError}
+        applicationStatusUnavailable={candidaturasError || user?.tipo === 'ADMIN'}
         onApply={handleCandidatar}
       />
     </Box>
