@@ -1,13 +1,14 @@
 import React, { useEffect } from 'react';
 import {
   Box, Heading, Text, SimpleGrid, Button,
-  Container, VStack, HStack, Icon, Flex, Tag, Grid, CircularProgress, Badge
+  Container, VStack, HStack, Icon, Flex, Tag, CircularProgress, Badge
 } from '@chakra-ui/react';
 import { useAuth } from '../context/useAuth';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { FaFileAlt, FaAward, FaTrophy, FaCheckCircle } from 'react-icons/fa';
 import { useQuery } from '@tanstack/react-query';
+import PublicHome from '../components/home/PublicHome';
 
 export default function Home() {
   const { isLoggedIn, user, hasResume, setHasResume, openAuthModal } = useAuth();
@@ -93,7 +94,7 @@ export default function Home() {
       <Container maxW="content" py={{ base: 8, md: 12 }}>
         <Box mb={10}>
           <Text textStyle="small" color="textSecondary" mb={1}>Bem-vindo de volta,</Text>
-          <Heading textStyle="h2">{user?.nome || 'Talento'}</Heading>
+          <Heading as="h1" textStyle="h2">{user?.nome || 'Talento'}</Heading>
         </Box>
 
         <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={6} mb={12}>
@@ -209,88 +210,5 @@ export default function Home() {
     );
   }
 
-  // landing page publica (visitante nao logado)
-  return (
-    <Box as="main">
-      <Container maxW="content" pt={{ base: 16, md: 32 }} pb={{ base: 16, md: 32 }}>
-        <Grid templateColumns={{ base: '1fr', lg: '1.2fr 1fr' }} gap={{ base: 12, lg: 16 }} alignItems="center">
-          <Box>
-            <Heading as="h1" textStyle="display" mb={6}>
-              Conectamos talentos às melhores oportunidades
-            </Heading>
-            <Text textStyle="body" color="textSecondary" mb={8} maxW="reading">
-              O banco de talentos da Point Media aproxima você de empresas parceiras da região.
-              Cadastre seu currículo, valide suas competências e ganhe visibilidade real no mercado.
-            </Text>
-            <Flex direction={{ base: 'column', sm: 'row' }} gap={4}>
-              <Button variant="primary" size="lg" onClick={() => openAuthModal('register')}>
-                Criar conta
-              </Button>
-              <Button variant="secondary" size="lg" onClick={() => openAuthModal('login')}>
-                Fazer login
-              </Button>
-            </Flex>
-          </Box>
-          <Box display={{ base: 'none', lg: 'block' }}>
-            <Flex direction="column" gap={4} p={6} bg="surface" borderRadius="card" border="1px solid" borderColor="border" maxW="400px" ml="auto" position="relative">
-              {/* Decorative accent */}
-              <Box position="absolute" top="-10px" right="-10px" w="40px" h="40px" bg="brandPink" opacity={0.1} borderRadius="full" />
-              <Box position="absolute" bottom="-20px" left="-20px" w="80px" h="80px" bg="brandBlue" opacity={0.1} borderRadius="full" zIndex={-1} />
-
-              <Flex align="center" gap={4}>
-                <Box w={12} h={12} borderRadius="full" bg="brandBlue" opacity={0.2} />
-                <Box flex={1}>
-                  <Box h={3} w="60%" bg="surfaceSubtle" borderRadius="sm" mb={2} />
-                  <Box h={2} w="40%" bg="surfaceSubtle" borderRadius="sm" />
-                </Box>
-                <Badge colorScheme="green" variant="subtle">Perfil Ativo</Badge>
-              </Flex>
-              <Box h="1px" bg="border" my={2} />
-              <Flex align="center" justify="space-between">
-                <Text textStyle="small" color="textSecondary">Visibilidade para RH</Text>
-                <Icon as={FaCheckCircle} color="brandPink" />
-              </Flex>
-            </Flex>
-          </Box>
-        </Grid>
-      </Container>
-
-      <Box bg="subtle" borderY="1px solid" borderColor="border">
-        <Container maxW="content" py={{ base: 16, md: 32 }}>
-          <Grid templateColumns={{ base: '1fr', md: '1fr 2fr' }} gap={{ base: 8, md: 16 }}>
-            <Box>
-              <Heading textStyle="h2" mb={4}>Como funciona</Heading>
-              <Text textStyle="body" color="textSecondary">
-                Uma jornada direta entre seu talento e as oportunidades que importam.
-              </Text>
-            </Box>
-
-            <Flex direction="column" gap={8}>
-              <Box borderLeft="2px solid" borderColor="borderStrong" pl={6} position="relative">
-                <Box position="absolute" left="-5px" top={1.5} w={2} h={2} borderRadius="full" bg="textPrimary" />
-                <Heading textStyle="h4" mb={2}>01. Monte seu currículo</Heading>
-                <Text textStyle="body" color="textSecondary" maxW="reading">
-                  Preencha seu perfil com experiências e habilidades. Destaque o que faz você se destacar.
-                </Text>
-              </Box>
-              <Box borderLeft="2px solid" borderColor="borderStrong" pl={6} position="relative">
-                <Box position="absolute" left="-5px" top={1.5} w={2} h={2} borderRadius="full" bg="textPrimary" />
-                <Heading textStyle="h4" mb={2}>02. Valide suas competências</Heading>
-                <Text textStyle="body" color="textSecondary" maxW="reading">
-                  Realize avaliações técnicas na plataforma e conquiste selos de competência.
-                </Text>
-              </Box>
-              <Box borderLeft="2px solid" borderColor="brandPink" pl={6} position="relative">
-                <Box position="absolute" left="-5px" top={1.5} w={2} h={2} borderRadius="full" bg="brandPink" />
-                <Heading textStyle="h4" mb={2} color="brandPink">03. Conecte-se</Heading>
-                <Text textStyle="body" color="textSecondary" maxW="reading">
-                  Com o perfil completo e vagas aplicadas, você aparece diretamente para o RH das empresas.
-                </Text>
-              </Box>
-            </Flex>
-          </Grid>
-        </Container>
-      </Box>
-    </Box>
-  );
+  return <PublicHome openAuthModal={openAuthModal} />;
 }
