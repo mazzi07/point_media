@@ -56,7 +56,7 @@ function ProductPreview() {
             <Text fontSize={{ base: 'lg', md: 'xl' }} fontWeight="700" mb={5}>Oportunidades à vista.</Text>
             <HStack spacing={2} mb={3} color="info"><Icon as={FiBriefcase} /><Text textStyle="label">Explore as vagas</Text></HStack>
             <Box border="1px solid" borderColor="border" borderRadius="card" p={4} bg="page">
-              <Flex align="center" justify="space-between" mb={3}><Box bg="surface" borderRadius="control" p={2}><Icon as={FiBriefcase} boxSize={5} color="info" /></Box><Text textStyle="metadata" color="textMuted">Exemplo de vaga</Text></Flex>
+              <Flex align="center" justify="space-between" mb={3}><Box bg="surface" borderRadius="control" p={2}><Icon as={FiBriefcase} boxSize={5} color="info" /></Box><Text textStyle="metadata" color="textSecondary">Exemplo de vaga</Text></Flex>
               <Text fontWeight="700" mb={2}>Desenvolvedor Frontend</Text>
               <HStack color="textSecondary" mb={4} spacing={1}><Icon as={FiMapPin} boxSize={3} /><Text textStyle="metadata">Remoto</Text></HStack>
               <HStack flexWrap="wrap" spacing={2}><Tag size="sm">React</Tag><Tag size="sm">JavaScript</Tag><Tag size="sm">CSS</Tag></HStack>
@@ -72,7 +72,7 @@ function ProductPreview() {
         <Flex align="center" justify="center" boxSize={10} bg="surfaceSubtle" borderRadius="full"><Icon as={FiAward} color="brandPink" boxSize={6} /></Flex>
         <Box><Text textStyle="label">Mostre suas competências</Text><Text textStyle="metadata" color="textSecondary">Quizzes e selos no seu perfil</Text></Box>
       </HStack>
-      <Text as="figcaption" textStyle="metadata" color="textMuted" textAlign="right" mt={3} pr={2}>Visão ilustrativa da plataforma</Text>
+      <Text as="figcaption" textStyle="metadata" color="textSecondary" textAlign="right" mt={3} pr={2}>Visão ilustrativa da plataforma</Text>
     </Box>
   );
 }
@@ -82,15 +82,15 @@ export default function PublicHome({ openAuthModal }) {
     'radial-gradient(ellipse at 85% 65%, rgba(213,24,123,.10), transparent 55%), linear-gradient(120deg, rgba(59,130,246,.07), transparent 65%)',
     'radial-gradient(ellipse at 85% 65%, rgba(213,24,123,.09), transparent 55%), linear-gradient(120deg, rgba(59,130,246,.08), transparent 65%)',
   );
-  const stepsBackground = useColorModeValue('rgba(213,24,123,.04)', 'rgba(213,24,123,.035)');
+  const stepsBackground = useColorModeValue('rgba(213,24,123,.04)', 'rgba(213,24,123,.015)');
   const headlineAccent = useColorModeValue('brandPink', '#F27AB8');
   const profileBackground = useColorModeValue('subtle', 'page');
 
   return (
     <Box>
       <Box as="section" aria-labelledby="home-title" backgroundImage={heroBackground}>
-        <Container py={{ base: 8, md: 12, lg: 16 }}>
-          <Grid templateColumns={{ base: 'minmax(0, 1fr)', lg: '1fr 1fr' }} gap={{ base: 6, lg: 10 }} alignItems="center">
+        <Container py={{ base: 6, md: 12, lg: 16 }}>
+          <Grid templateColumns={{ base: 'minmax(0, 1fr)', lg: '1fr 1fr' }} gap={{ base: 5, lg: 10 }} alignItems="center">
             <Box>
               <HStack spacing={2} mb={5}><Box aria-hidden="true" w={2} h={2} bg="brandPink" borderRadius="full" /><Eyebrow color="textSecondary">Banco de talentos Point Media</Eyebrow></HStack>
               <Heading id="home-title" as="h1" fontSize={{ base: '36px', md: '52px', xl: '60px' }} lineHeight={1.08} letterSpacing="-0.045em" maxW="600px">
@@ -114,13 +114,13 @@ export default function PublicHome({ openAuthModal }) {
       </Box>
 
       <Box as="section" aria-labelledby="steps-title" bg={stepsBackground} borderY="1px solid" borderColor="border">
-        <Container py={{ base: 8, md: 16 }}>
+        <Container py={{ base: 6, md: 16 }}>
           <Box textAlign="center" maxW="640px" mx="auto" mb={{ base: 6, md: 8 }}>
             <Eyebrow color="textSecondary" mb={3}>Como funciona</Eyebrow>
             <Heading as="h2" id="steps-title" textStyle="h2" fontSize={{ base: '26px', md: '34px' }}>Do seu talento à <Box as="span" color={headlineAccent}>oportunidade.</Box></Heading>
             <Text textStyle="body" color="textSecondary" mt={3}>Três passos para começar a sua jornada na Point Media.</Text>
           </Box>
-          <SimpleGrid as="ol" listStyleType="none" m={0} columns={{ base: 1, md: 3 }} spacing={{ base: 4, md: 6 }}>
+          <SimpleGrid as="ol" listStyleType="none" m={0} columns={{ base: 1, md: 3 }} spacing={{ base: 4, md: 8 }}>
             {steps.map((step, index) => (
               <Box as="li" key={step.title} position="relative" display="flex" flexDirection="column" bg="surface" border="1px solid" borderColor="border" borderRadius="card" p={{ base: 5, md: 5, lg: 8 }}>
                 <Flex align="center" justify="space-between" mb={{ base: 3, md: 5 }}>
@@ -135,7 +135,7 @@ export default function PublicHome({ openAuthModal }) {
                 <HStack aria-hidden="true" mt={{ base: 3, md: 5 }} spacing={1}>
                   {steps.map((_, segment) => <Box key={segment} w={6} h={1} borderRadius="full" bg={segment <= index ? step.color : 'border'} />)}
                 </HStack>
-                {index < 2 && <Flex aria-hidden="true" display={{ base: 'none', md: 'flex' }} position="absolute" right="-25px" top="45%" zIndex={1} w={6} h={6} align="center" justify="center" bg="surface" border="1px solid" borderColor="border" borderRadius="full"><Icon as={FiArrowRight} boxSize={3} color="textSecondary" /></Flex>}
+                {index < 2 && <Flex aria-hidden="true" display={{ base: 'none', md: 'flex' }} position="absolute" right="-16px" top="50%" transform="translateY(-50%)" zIndex={1} w={8} h={8} align="center" justify="center" bg="surface" border="1px solid" borderColor="border" borderRadius="full" boxShadow="sm"><Icon as={FiArrowRight} boxSize={4} color="textSecondary" /></Flex>}
               </Box>
             ))}
           </SimpleGrid>
@@ -143,7 +143,7 @@ export default function PublicHome({ openAuthModal }) {
       </Box>
 
       <Box as="section" aria-labelledby="benefits-title">
-        <Container py={{ base: 8, md: 16 }}>
+        <Container py={{ base: 6, md: 16 }}>
           <Flex justify="space-between" align={{ base: 'flex-start', md: 'flex-end' }} direction={{ base: 'column', md: 'row' }} gap={4} mb={8}>
             <Box maxW="580px"><Eyebrow color="info" mb={3}>Mais possibilidades, no mesmo lugar</Eyebrow><Heading as="h2" id="benefits-title" textStyle="h2" fontSize={{ base: '26px', md: '34px' }}>Além das vagas, espaço para suas <Box as="span" color="info">competências.</Box></Heading></Box>
             <Text textStyle="body" color="textSecondary" maxW="300px">Ferramentas para apresentar o que você sabe e dar o próximo passo.</Text>
@@ -167,7 +167,7 @@ export default function PublicHome({ openAuthModal }) {
         </Container>
       </Box>
 
-      <Container pb={{ base: 8, md: 16 }}>
+      <Container pb={{ base: 6, md: 16 }}>
         <Grid as="section" aria-labelledby="profile-title" templateColumns={{ base: 'minmax(0, 1fr)', md: '1fr 1fr' }} gap={{ base: 6, md: 12 }} alignItems="center" bg={profileBackground} border="1px solid" borderColor="border" borderRadius="dialog" p={{ base: 5, md: 8, lg: 12 }}>
           <Box>
             <Eyebrow color="info" mb={3}>Muito mais que um nome no currículo</Eyebrow>
@@ -179,15 +179,22 @@ export default function PublicHome({ openAuthModal }) {
             <Box bg="surface" border="1px solid" borderColor="border" borderTop="3px solid" borderTopColor="brandBlue" borderRadius="card" p={{ base: 5, lg: 7 }}>
               <HStack spacing={3} mb={{ base: 4, md: 6 }}><Flex align="center" justify="center" boxSize={12} flexShrink={0} bg="surfaceSubtle" border="1px solid" borderColor="border" borderRadius="full"><Icon as={FiUser} color="info" boxSize={6} /></Flex><Box><Text fontWeight="700">Seu perfil profissional</Text><Text textStyle="metadata" color="textSecondary">Uma trajetória, muitas possibilidades</Text></Box></HStack>
               <VStack align="stretch" spacing={0}>
-                {[['Experiências e formação', FiFileText], ['Habilidades e competências', FiCheck], ['Selos conquistados em quizzes', FiAward]].map(([label, icon]) => <HStack key={label} spacing={3} py={{ base: 3, md: 4 }} px={icon === FiAward ? 3 : 0} mt={icon === FiAward ? 2 : 0} bg={icon === FiAward ? 'surfaceSubtle' : undefined} borderRadius={icon === FiAward ? 'control' : undefined} borderTop={icon === FiAward ? undefined : '1px solid'} borderColor="border"><Icon as={icon} color={icon === FiAward ? 'brandPink' : 'info'} flexShrink={0} /><Text textStyle="small">{label}</Text></HStack>)}
+                {[['Experiências e formação', FiFileText], ['Habilidades e competências', FiCheck], ['Selos conquistados em quizzes', FiAward]].map(([label, icon]) => (
+                  <Flex key={label} alignItems="center" gap={3} py={{ base: 3, md: 4 }} borderTop="1px solid" borderColor="border">
+                    <Flex boxSize={5} alignItems="center" justify="center" flexShrink={0}>
+                      <Icon as={icon} color={icon === FiAward ? 'brandPink' : 'info'} boxSize={icon === FiAward ? 4 : 5} />
+                    </Flex>
+                    <Text textStyle="small" lineHeight="1.5">{label}</Text>
+                  </Flex>
+                ))}
               </VStack>
             </Box>
-            <Text as="figcaption" textStyle="metadata" color="textMuted" mt={3}>Representação ilustrativa dos recursos do perfil.</Text>
+            <Text as="figcaption" textStyle="metadata" color="textSecondary" mt={3}>Representação ilustrativa dos recursos do perfil.</Text>
           </Box>
         </Grid>
       </Container>
 
-      <Container pb={{ base: 8, md: 16 }}>
+      <Container pb={{ base: 6, md: 16 }}>
         <Box as="section" aria-labelledby="cta-title" position="relative" overflow="hidden" borderRadius="dialog" bg="brand.darkBg" backgroundImage="linear-gradient(110deg, rgba(59,130,246,.18), rgba(59,130,246,.55))" color="white" p={{ base: 6, md: 12 }}>
           <Box aria-hidden="true" pointerEvents="none" position="absolute" inset={0}>
             <Box position="absolute" bg="brandPink" w={{ base: 32, md: 40 }} h={{ base: 32, md: 40 }} borderRadius="45% 55% 35% 65%" right={-24} bottom={-20} transform="rotate(-25deg)" />
