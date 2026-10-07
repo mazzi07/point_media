@@ -1,189 +1,80 @@
-# Scripts de desenvolvimento — Point Media
+# Scripts de Automação — Point Media
 
-Esta pasta contém scripts para facilitar a configuração e a execução local do projeto por integrantes do grupo.
+Esta pasta contém os scripts em PowerShell oficiais do projeto. Eles foram desenhados para padronizar e facilitar a execução local para todos os desenvolvedores.
 
-## Requisitos
+## 🛠️ Visão Geral
 
-Antes de usar os scripts, instale:
+Os scripts disponíveis são:
 
-- Git
-- Node.js 24 LTS
-- Java JDK 17
-- Apache Maven 3.9+
-- MySQL Server 8.x
+1. `PointMedia-Setup.ps1` (Configuração inicial)
+2. `PointMedia-Dev.ps1` (Uso diário)
+3. `PointMedia-Build.ps1` (Empacotamento completo)
 
-Docker Desktop é opcional para desenvolvimento local.
+> **Importante:** Todos os scripts devem ser executados no **PowerShell**, preferencialmente na raiz do projeto, utilizando a flag de liberação de execução local:
+> `powershell -ExecutionPolicy Bypass -File .\scripts\NomeDoScript.ps1`
 
-> Recomendação: evite instalar MySQL Server e WAMP/MariaDB ao mesmo tempo para não criar conflito de porta. O padrão do grupo é MySQL Server na porta `3306`.
+---
 
-## Primeira configuração
+## 1. PointMedia-Setup.ps1 (Primeira Configuração)
 
-Execute apenas uma vez por máquina:
+**Quando usar?**
+Apenas uma vez, ao clonar o projeto pela primeira vez na sua máquina ou quando você alterar a senha/porta do seu banco de dados local.
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\PointMedia-Setup.ps1
-```
+**O que ele faz?**
+- Verifica a existência de todos os pré-requisitos: Git, Node.js, npm, Java, Maven e MySQL.
+- Valida se você está rodando as versões corretas (Node 24 LTS, Java 17).
+- Solicita suas configurações locais de banco (usuário, senha, porta).
+- Cria o banco `point_media_talent_bank` no seu MySQL caso ele ainda não exista.
+- Criptografa a sua senha e salva localmente (fora do repositório) no seu perfil do Windows.
+- Executa a instalação limpa das dependências (`npm ci`).
+- Faz um teste preliminar de build (lint e build frontend, package backend).
 
-O script:
+**Segurança Local:**
+A configuração e credenciais são salvas nos diretórios:
+- `%USERPROFILE%\.pointmedia\dev-config.json`
+- `%USERPROFILE%\.pointmedia\mysql-credential.xml`
 
-- verifica Git, Node, npm, Java, Maven e MySQL;
-- valida as versões principais do ambiente;
-- pede host, porta, usuário e senha do MySQL;
-- cria o banco `point_media_talent_bank` caso ele ainda não exista;
-- salva a configuração local fora do repositório;
-- salva a senha do MySQL criptografada pelo Windows;
-- executa `npm ci`;
-- roda lint e build do frontend;
-- roda o build Maven do backend;
-- mostra a branch atual e avisa se houver alterações locais.
+A senha é protegida pelo `PSCredential` e `Export-Clixml`, usando a criptografia nativa do Windows (DPAPI). Ela fica atrelada unicamente ao seu usuário do Windows na sua máquina.
 
-A senha do MySQL não é salva no Git.
+---
 
-## Uso diário
+## 2. PointMedia-Dev.ps1 (Uso Diário)
 
-Depois que o Setup tiver sido executado com sucesso, use apenas:
+**Quando usar?**
+Todos os dias, sempre que for começar a desenvolver.
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\PointMedia-Dev.ps1
-```
+**O que ele faz?**
+- Consome a configuração e as credenciais geradas pelo *Setup*.
+- Verifica se você não está programando na branch `main` por engano.
+- Confirma que as portas de rede (8080 e 5173) não estão ocupadas por sessões antigas travadas.
+- Testa a conexão com o MySQL de forma transparente.
+- Gera em memória um `JWT_SECRET` seguro descartável exclusivo para o seu ciclo de testes local daquele dia.
+- Inicia o servidor do Spring Boot e o servidor Vite do React de forma paralela.
+- Aguarda a inicialização e abre automaticamente o navegador.
 
-O script:
+---
 
-- carrega a configuração local desta máquina;
-- verifica a branch atual;
-- avisa se você estiver na `main`;
-- verifica se as portas `8080` e `5173` estão livres;
-- testa a conexão com o MySQL;
-- gera um JWT secreto temporário;
-- inicia o backend Spring Boot;
-- inicia o frontend Vite;
-- aguarda os serviços responderem;
-- abre o navegador automaticamente.
+## 3. PointMedia-Build.ps1 (Empacotamento)
 
-## URLs locais
+**Quando usar?**
+Quando precisar gerar a versão unificada local (JAR) contendo frontend e backend juntos, replicando o comportamento esperado no servidor final ou contêiner.
 
-Frontend:
+**O que ele faz?**
+- Executa o build de produção do frontend Vite.
+- Substitui de forma segura o conteúdo da pasta transitória `backend/src/main/resources/static`.
+- Transfere o diretório `dist/` do React para dentro dos resources do Spring Boot.
+- Realiza a compilação limpa do Maven (`mvn clean package`), ignorando testes momentaneamente para agilidade.
+- Gera o `.jar` final unificado e auto-executável na pasta `backend/target/`.
 
-```text
-http://localhost:5173
-```
+---
 
-Backend:
+## 🛟 Troubleshooting Comum
 
-```text
-http://localhost:8080
-```
-
-API pública de teste:
-
-```text
-http://localhost:8080/api/vagas
-```
-
-## Configuração local
-
-Os dados específicos de cada máquina ficam fora do repositório:
-
-```text
-%USERPROFILE%\.pointmedia\dev-config.json
-%USERPROFILE%\.pointmedia\mysql-credential.xml
-```
-
-`dev-config.json` guarda apenas configurações locais, como:
-
-- caminho do projeto;
-- host e porta do MySQL;
-- nome do banco;
-- usuário do banco;
-- portas do backend e frontend.
-
-`mysql-credential.xml` armazena a senha usando a criptografia do Windows/PowerShell.
-
-Esse arquivo só pode ser descriptografado pelo mesmo usuário do Windows na mesma máquina.
-
-Para trocar senha, banco, usuário ou caminho do projeto, execute novamente:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\PointMedia-Setup.ps1
-```
-
-## Fluxo Git recomendado
-
-Não desenvolva diretamente na `main`.
-
-Antes de criar uma nova funcionalidade:
-
-```powershell
-git checkout main
-git pull --ff-only origin main
-git checkout -b feature/nome-da-funcionalidade
-git push -u origin feature/nome-da-funcionalidade
-```
-
-Antes de começar a trabalhar:
-
-```powershell
-git status
-git pull
-```
-
-Antes de commit ou push:
-
-```powershell
-npm.cmd run lint
-npm.cmd run build
-
-cd backend
-mvn.cmd -DskipTests package
-cd ..
-
-git diff --check
-git status
-```
-
-## Se algo parar de funcionar
-
-### Porta 8080 ou 5173 ocupada
-
-Feche instâncias antigas do Spring Boot ou Vite e execute novamente o script de desenvolvimento.
-
-### MySQL inacessível
-
-Confirme que o serviço MySQL está ligado:
-
-```powershell
-mysql -u root -p
-```
-
-Se a senha ou configuração mudou, rode novamente o Setup.
-
-### Dependências do frontend mudaram
-
-Se `package-lock.json` mudou após um `git pull`, rode:
-
-```powershell
-npm.cmd ci
-```
-
-Ou execute novamente o Setup.
-
-### Java, Maven, Node ou MySQL não encontrado
-
-O programa não está instalado ou não está configurado no `PATH`.
-
-Corrija a instalação e execute novamente:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\PointMedia-Setup.ps1
-```
-
-## Docker
-
-Docker não é necessário para o desenvolvimento diário.
-
-Ele pode ser usado para:
-
-- validar a imagem final;
-- testar comportamento de release;
-- executar a aplicação em ambiente isolado;
-- facilitar demonstrações em máquinas que não vão alterar código.
+- **Erro de "Execução de Scripts Desabilitada":**
+  O Windows bloqueia scripts `.ps1` por padrão. Certifique-se de iniciar o comando com `powershell -ExecutionPolicy Bypass -File ...`.
+- **A porta 8080 ou 5173 já está em uso:**
+  Geralmente acontece se o terminal foi fechado sem encerrar o script de desenvolvimento anterior (Ctrl+C). Mate as instâncias persistentes de Java/Node no Gerenciador de Tarefas e tente novamente.
+- **MySQL inacessível:**
+  Confirme que o serviço nativo do MySQL está rodando no Windows. Se você trocou a senha do seu banco de dados via Workbench/CLI, lembre-se de rodar novamente o `PointMedia-Setup.ps1` para sincronizar a credencial salva.
+- **Dependências desatualizadas no frontend:**
+  Se alguém modificou o `package.json` remotamente e você obteve isso no seu `git pull`, feche o servidor diário e rode um `npm ci` manual ou re-execute o *Setup*.

@@ -1,235 +1,197 @@
-# 🎯 Point Media — Banco de Talentos
+# Point Media - Banco de Talentos
 
-> **Projeto de TCC** — FATEC Tatuí | Análise e Desenvolvimento de Sistemas  
-> Plataforma web de banco de talentos para a empresa **Point Media**, conectando candidatos qualificados às melhores oportunidades da empresa.
-
----
-
-## 📋 Sobre o Projeto
-
-O **Point Media Talent Bank** é uma aplicação web fullstack que funciona como um **banco de talentos interno** da empresa Point Media (empresa real de mídia digital atuante desde 2017). A plataforma permite que candidatos criem perfis profissionais, realizem quizzes técnicos e sejam avaliados por recrutadores.
-
-### Funcionalidades Principais
-
-| Módulo | Descrição |
-|--------|-----------|
-| 🔐 **Autenticação** | Login/cadastro com JWT via cookies HttpOnly + BCrypt |
-| 📄 **Currículo** | Wizard de 4 etapas (dados básicos → experiência → habilidades → revisão), perfil e PDF |
-| 💼 **Vagas** | Listagem de vagas internas com filtros por área e busca |
-| 🧠 **Quizzes** | Avaliações técnicas com timer, correção automática e ranking |
-| 🏆 **Ranking** | Ranking global de candidatos com pódio e pontuação |
-| 🔔 **Notificações** | Admin pode enviar notificações para candidatos específicos |
-| 👨‍💼 **Painel Admin** | Candidatos com currículo + candidatura, filtros, vagas, estatísticas e notificações |
-| 🌗 **Tema** | Suporte a Dark Mode e Light Mode |
-
-### Papéis Atuais (Roles)
-- **CANDIDATO**: Papel padrão ao realizar o registro público. Pode acessar vagas, fazer quizzes e criar currículo.
-- **ADMIN**: Recrutador. Pode acessar o painel administrativo, visualizar candidatos e enviar notificações.
+Plataforma web de banco de talentos da Point Media. O sistema conecta candidatos a oportunidades, permitindo que os candidatos criem contas, montem seus currículos, realizem quizzes técnicos para obtenção de selos (badges) e se candidatem a vagas. Por outro lado, a equipe de RH/Admin pode gerenciar vagas e analisar o banco de candidatos.
 
 ---
 
-## 🛠️ Tecnologias
+## 🌟 Funcionalidades Atuais
 
-### Frontend
-| Tecnologia | Versão | Uso |
-|------------|--------|-----|
-| React | 19.x | Biblioteca de UI |
-| Vite | 8.x | Build tool / dev server |
-| Chakra UI | 2.x | Design system / componentes |
-| React Router DOM | 7.x | Roteamento SPA |
-| TanStack React Query | 5.x | Cache e gerenciamento de estado servidor |
-| React Hook Form | 7.x | Gerenciamento de formulários |
-| Zod | 4.x | Validação de schemas |
-| html2pdf.js | 0.14.x | Geração de currículo em PDF |
-
-Também permanecem Emotion, Framer Motion e React Icons. Infraestrutura: Docker e Git/GitHub. Nenhuma dependência de runtime foi removida no Final Polish.
-
-### Backend
-| Tecnologia | Versão | Uso |
-|------------|--------|-----|
-| Java | 17 | Linguagem principal |
-| Spring Boot | 3.5.x | Framework web |
-| Spring Security | - | Autenticação e autorização |
-| Spring Data JPA | - | ORM / acesso a dados |
-| MySQL | 8.x | Banco de dados relacional |
-| Flyway | 11.x | Migrations do banco de dados |
-| JJWT | 0.12.6 | Geração/validação de JWT |
-| Maven | - | Gerenciador de dependências |
+- **Autenticação**: Login/cadastro com JWT em cookie HttpOnly e senhas com BCrypt.
+- **Currículo**: Criação e edição do currículo do candidato.
+- **Geração de PDF**: Exportação do currículo do candidato para PDF.
+- **Vagas**: Consulta e listagem de vagas disponíveis.
+- **Candidaturas**: Submissão de aplicações para as vagas abertas.
+- **Quizzes**: Testes técnicos com tentativas únicas.
+- **Ranking**: Classificação gamificada de candidatos com base no desempenho.
+- **Badges**: Conquista de selos de competência técnica mediante aprovação em quizzes.
+- **Notificações**: Notificações internas (eventos do sistema e envio administrativo).
+- **Painel Administrativo**: Gestão de vagas e visualização do banco de talentos.
+- **UI UX**: Tema dinâmico (Dark / Light mode).
 
 ---
 
-## 📁 Estrutura do Projeto
+## 🎭 Perfis de Acesso (Roles)
 
+O sistema possui uma divisão estrita de responsabilidades:
+
+### 👤 Candidato
+O Candidato é o usuário final externo. Ele **pode**:
+- Criar e editar o próprio currículo.
+- Candidatar-se a vagas.
+- Consultar suas candidaturas.
+- Responder quizzes técnicos.
+- Receber selos (badges) baseados em resultados.
+- Participar do ranking geral de candidatos.
+- Utilizar todos os recursos voltados para o perfil de candidato.
+
+### 🛡️ Admin (RH)
+O Administrador gerencia a plataforma. Ele **pode**:
+- Acessar o painel administrativo.
+- Visualizar e analisar o banco completo de candidatos.
+- Gerenciar vagas (criar, editar, excluir).
+- Utilizar recursos e ferramentas administrativas da plataforma.
+
+O Admin **NÃO PODE**:
+- Criar um currículo pessoal de candidato na sua conta.
+- Candidatar-se a vagas.
+- Responder quizzes como se fosse um candidato.
+- Gerar resultados ou adquirir badges para si mesmo.
+- Participar do ranking.
+- Aparecer no banco de talentos listado como candidato.
+
+*(Não confunda o Admin com um "candidato com permissões extras". As entidades de negócio são mutuamente exclusivas nas operações diárias da plataforma).*
+
+---
+
+## 🛠️ Tecnologias (Stack)
+
+Principais bibliotecas e frameworks do projeto:
+
+**Frontend:**
+- React 19
+- Vite 8
+- Chakra UI 2
+- React Router 7
+- TanStack Query 5
+- React Hook Form 7
+- Zod 4
+- html2pdf.js
+- Emotion & Framer Motion
+- React Icons
+
+**Backend:**
+- Java 17
+- Spring Boot 3.5
+- Spring Security
+- Spring Data JPA
+- Flyway 11 (Migrations automáticas)
+- MySQL 8
+- JJWT 0.12.6
+- Maven 3.9+
+
+**Infra:**
+- Docker
+- Git / GitHub
+- PowerShell (Scripts de automação local)
+
+---
+
+## ⚙️ Pré-requisitos Oficiais
+
+O ambiente padronizado da equipe requer:
+
+1. **Git**
+2. **Node.js 24 LTS**
+3. **Java JDK 17** (Versão oficial. *Não utilize Java 21 como padrão*).
+4. **Apache Maven 3.9+**
+5. **MySQL Server 8.x** (Instalação padrão rodando na porta 3306).
+6. **VS Code** (ou IDE equivalente).
+
+> ⚠️ **Atenção:** Evite a instalação paralela de WampServer/MariaDB caso já tenha o MySQL Server. Disputas pela porta `3306` causam falhas silenciosas de conexão. O fluxo oficial utiliza exclusivamente o MySQL 8.
+
+---
+
+## 🚀 Início Rápido (Quick Start)
+
+Desenvolvemos scripts unificados para automatizar o ambiente. No Windows, o fluxo recomendado de desenvolvimento utiliza os scripts PowerShell incluídos no projeto.
+
+### Primeira Vez (Configuração)
+Executado apenas uma vez ao clonar o projeto ou se precisar trocar as credenciais:
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\PointMedia-Setup.ps1
 ```
+*(Valida requisitos, cria o banco e baixa dependências. Parâmetros locais são salvos em `%USERPROFILE%\.pointmedia\dev-config.json` fora do Git. A credencial do banco utiliza o mecanismo local `PSCredential/Export-Clixml` do PowerShell associado ao seu usuário do Windows).*
+
+### Uso Diário (Desenvolvimento)
+Execute sempre que for iniciar seu dia de trabalho:
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\PointMedia-Dev.ps1
+```
+*(Carrega a configuração, inicia o Spring Boot e o Vite simultaneamente e abre o navegador).*
+
+### Build Completo
+Para gerar o build completo e o artefato executável de release (`.jar`):
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\PointMedia-Build.ps1
+```
+
+> **Artefatos Gerados:** A pasta `backend/src/main/resources/static` é preenchida automaticamente pelo build do frontend para embutir o React no JAR final. Ela NÃO é a fonte do frontend e NÃO deve ser versionada no Git. O código-fonte real do frontend permanece em `src/`.
+
+> **Para saber mais sobre como os scripts funcionam:** Leia [scripts/README.md](scripts/README.md).
+
+---
+
+## 📂 Estrutura do Repositório
+
+```text
 point_media/
-├── 📂 backend/                        # API Spring Boot (Java)
-│   ├── pom.xml                        # Dependências Maven
-│   └── 📂 src/main/
-│       ├── 📂 java/com/pointmedia/auth/
-│       │   ├── AuthApplication.java   # Classe principal
-│       │   ├── 📂 config/
-│       │   │   ├── SecurityConfig.java
-│       │   │   └── SpaWebConfig.java  # Roteamento SPA (fallback pro index.html)
-│       │   ├── 📂 controller/         # Endpoints REST (Auth, Curriculo, Quizzes, Vagas, Admin)
-│       │   ├── 📂 model/              # Entidades JPA (Usuario, Curriculo, etc.)
-│       │   ├── 📂 repository/         # Spring Data Repositories
-│       │   └── 📂 security/           # Configuração JWT e Filtros
-│       └── 📂 resources/
-│           ├── application.properties # Configurações da aplicação
-│           └── 📂 db/migration/       # Flyway SQL migrations (V1 a V9)
-│
-├── 📂 src/                            # Frontend React
-│   ├── main.jsx                       # Entry point
-│   ├── App.jsx                        # Rotas e layout principal
-│   ├── 📂 assets/                     # Logo e imagens
-│   ├── 📂 context/                    # Contextos (AuthContext)
-│   ├── 📂 services/                   # Integrações com API
-│   ├── 📂 components/                 # Componentes genéricos e UI modular (ex: vagas, admin)
-│   └── 📂 pages/                      # Views de páginas completas (Home, Vagas, AdminPage)
-│
-├── 📂 docs/                           # Documentações adicionais (Plano de Evolução, Apresentação)
-├── build-all.ps1                      # Script de build Windows unificado
+├── backend/                           # Código-fonte Java (Spring Boot)
+├── src/                               # Código-fonte React (Frontend)
+├── docs/                              # Documentações adicionais
+├── scripts/                           # Scripts locais de automação e build
+│   ├── PointMedia-Setup.ps1           # Script de configuração do ambiente
+│   ├── PointMedia-Dev.ps1             # Script de desenvolvimento diário
+│   ├── PointMedia-Build.ps1           # Script de build unificado
+│   └── README.md                      # Documentação dos scripts
 ├── Dockerfile                         # Configuração Docker (Multi-stage)
+├── package.json                       # Dependências Node
 ├── vite.config.js                     # Config do Vite
-└── package.json
+└── README.md                          # Esta documentação
 ```
 
 ---
 
-## 🚀 Como Rodar o Projeto (Desenvolvimento)
+## 🔧 Configuração Manual / Troubleshooting
 
-O fluxo de desenvolvimento normal envolve rodar o backend no Spring Boot e o frontend pelo Vite simultaneamente.
+Este é o fluxo manual. **Para desenvolvimento normal, use os scripts.**
+Se você precisar rodar os serviços manualmente sem o PowerShell:
 
-### Pré-requisitos
-- **Node.js 24 LTS** e npm (linha adotada também no Docker). O Vite instalado exige `^20.19.0 || >=22.12.0`; Node 18 é incompatível. Use atualizações de manutenção da linha 24, conforme o [calendário oficial](https://github.com/nodejs/Release#release-schedule).
-- **Java JDK** 17
-- **Maven** 3.8+
-- **MySQL** 8.x (via WampServer ou standalone)
+1. **Crie o Banco de Dados:**
+   No MySQL, execute: `CREATE DATABASE IF NOT EXISTS point_media_talent_bank;`
+2. **Inicie o Backend:**
+   No terminal, forneça as variáveis de ambiente e inicie o Maven:
+   ```bash
+   cd backend
+   mvn spring-boot:run
+   ```
 
-### 1. Banco de Dados (MySQL)
-Crie o banco de dados via console MySQL ou phpMyAdmin (porta 3306 padrão):
-```sql
-CREATE DATABASE point_media_talent_bank;
-```
-> ⚠️ O Flyway roda automaticamente ao iniciar o Spring Boot e executa todas as migrações na pasta `db/migration`.
-> O script `V2__add_vagas.sql` cria automaticamente a conta de administrador inicial.
-
-### 2. Backend (Spring Boot)
-Defina uma chave JWT privada antes de iniciar o backend. Para uma sessão local de PowerShell, gere uma chave aleatória sem imprimi-la:
-```powershell
-$secretBytes = New-Object byte[] 64
-[System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($secretBytes)
-$env:JWT_SECRET = [Convert]::ToBase64String($secretBytes)
-```
-Em produção, armazene uma chave forte e estável em `JWT_SECRET` no gerenciador de segredos do ambiente. Não existe fallback no código.
-
-Configure as variáveis no processo do backend; ele não carrega automaticamente um `.env` da raiz:
-
-| Variável | Desenvolvimento / padrão | Publicação |
-| --- | --- | --- |
-| `JWT_SECRET` | Obrigatória; chave aleatória gerada acima | Chave forte e estável; nunca versionar |
-| `SPRING_DATASOURCE_URL` | JDBC para `localhost:3306/point_media_talent_bank` | URL JDBC acessível pelo backend; configurar TLS conforme o provedor |
-| `SPRING_DATASOURCE_USERNAME` | `root` | Usuário dedicado com permissões para migrações |
-| `SPRING_DATASOURCE_PASSWORD` | Vazia | Senha fornecida pelo ambiente |
-| `CORS_ALLOWED_ORIGINS` | Sem configuração: `http://localhost:5173` e `http://127.0.0.1:5173` | Obrigatória com `PRODUCTION=true`; origens exatas separadas por vírgula |
-| `PRODUCTION` | `false` para HTTP local | `true` com HTTPS; ativa cookie Secure. Docker usa `true` por padrão |
-| `SHOW_SQL` | `false`; `true` para diagnóstico local | Manter `false` para não registrar cada comando SQL |
-| `PORT` | `8080` | Porta HTTP interna do backend |
-
-Os padrões locais de banco não são credenciais de publicação. Se alterar a porta local do backend, ajuste também o proxy em `vite.config.js`.
-
-```bash
-cd backend
-mvn spring-boot:run
-```
-O backend ficará disponível em **http://localhost:8080**.
-
-### 3. Frontend (React + Vite)
-Abra outro terminal na raiz do projeto:
-```bash
-npm ci
-npm run dev
-```
-O frontend estará em **http://localhost:5173**. Todas as requisições para `/api` são direcionadas automaticamente via proxy para a porta 8080.
+**Variáveis de Ambiente (`application.properties`)**
+| Variável | Descrição |
+|---|---|
+| `JWT_SECRET` | Obrigatória. Chave para assinar os tokens JWT. |
+| `SPRING_DATASOURCE_URL` | Padrão: `jdbc:mysql://localhost:3306/point_media_talent_bank...` |
+| `SPRING_DATASOURCE_USERNAME` | Padrão: `root` |
+| `SPRING_DATASOURCE_PASSWORD` | Senha do banco local, se exigida. |
+| `CORS_ALLOWED_ORIGINS` | Vazia localmente; obrigatória em produção (origens exatas). |
+| `PRODUCTION` | `true` ativa envio de cookies `Secure` (requer HTTPS real). |
+| `SHOW_SQL` | Padrão `false`. `true` apenas para diagnóstico. |
+| `PORT` | Porta do backend (padrão 8080). |
+3. **Inicie o Frontend:**
+   Em outro terminal:
+   ```bash
+   npm ci
+   npm run dev
+   ```
 
 ---
 
-## 📦 Build e Deploy
+## 🗄️ Banco de Dados e Flyway (Migrations)
 
-### Regras de Build e Artefatos (Generated Artifacts Policy)
-- A pasta `backend/src/main/resources/static` é o destino final do build do frontend, mas **não é versionada no Git**.
-- O código-fonte do React fica em `src/` e é a única fonte da verdade do frontend.
+O projeto usa Flyway para controle de versão do banco. Nenhuma alteração de schema deve ser feita manualmente; crie um novo arquivo de migração na pasta do backend.
 
-### Build Unificado Local (Windows)
-Para gerar o arquivo `.jar` executável contendo o backend e o frontend embutido para produção, utilize o script Powershell incluso:
-```powershell
-npm.cmd ci
-powershell -ExecutionPolicy Bypass -File .\build-all.ps1
-```
-Esse script valida o caminho antes de apagar `static`, compila o Vite, copia `dist/` e executa `mvn.cmd clean -DskipTests package`. Para executar o artefato, com JWT e banco configurados:
-
-```powershell
-java -jar backend/target/auth-service-0.0.1-SNAPSHOT.jar
-```
-
-### Build via Docker
-O projeto conta com um `Dockerfile` multi-stage que:
-1. Faz o build do frontend usando Node 24 Alpine.
-2. Faz o build do backend usando Maven.
-3. Copia o frontend para dentro da imagem de backend e compila um único JAR executável.
-
-```bash
-docker build -t pointmedia .
-```
-
-Para teste **local** no Docker Desktop com MySQL no host, configure previamente `JWT_SECRET`, `SPRING_DATASOURCE_USERNAME` e `SPRING_DATASOURCE_PASSWORD` no terminal:
-
-```powershell
-$env:SPRING_DATASOURCE_URL = 'jdbc:mysql://host.docker.internal:3306/point_media_talent_bank?serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false'
-docker run --rm -p 8080:8080 --env JWT_SECRET --env SPRING_DATASOURCE_URL --env SPRING_DATASOURCE_USERNAME --env SPRING_DATASOURCE_PASSWORD --env PRODUCTION=false --env CORS_ALLOWED_ORIGINS=http://localhost:8080 pointmedia
-```
-
-`localhost` dentro do container é o próprio container. O MySQL do host deve aceitar conexões pela rede do Docker, com usuário/firewall adequados. Em Linux pode ser necessário `--add-host=host.docker.internal:host-gateway`; para banco remoto ou outro container, use seu hostname acessível na rede.
-
-Na publicação, configure uma URL de banco apropriada (incluindo TLS), `PRODUCTION=true`, origens HTTPS reais em `CORS_ALLOWED_ORIGINS` e HTTPS no proxy de entrada. O exemplo local desativa TLS do banco e cookie Secure apenas para desenvolvimento. A imagem final usa JRE 17; o build não valida migrações ou conexão MySQL.
-
----
-
-## 🧪 Comandos Úteis e Qualidade
-
-**Verificar Linters e Build do Frontend:**
-```bash
-npm run lint
-npm run build
-```
-
-**Validar Compilação do Backend:**
-```bash
-cd backend
-mvn -DskipTests package
-```
-
-No PowerShell use `npm.cmd` e `mvn.cmd`. Verifique também, na raiz:
-
-```powershell
-npm.cmd ci --dry-run
-powershell -ExecutionPolicy Bypass -File .\build-all.ps1
-git diff --check
-git diff --stat
-git status --short
-git ls-files backend/src/main/resources/static
-git ls-files 'logs*.json'
-```
-
-As duas últimas consultas devem retornar vazias. O lockfile deve permanecer sincronizado com `package.json`. Empacotar com `-DskipTests` não comprova testes de integração ou execução.
-
----
-
-## 🚨 Notas e Known Issues
-- **Segurança de release**: use HTTPS e `PRODUCTION=true` para cookies `Secure`. Configure `CORS_ALLOWED_ORIGINS` com as origens completas permitidas, separadas por vírgula, sem caminhos, barra final ou curingas (ex.: `https://talentos.exemplo.com`). Produção não inicia sem essa configuração; desenvolvimento sem configuração aceita apenas `http://localhost:5173` e `http://127.0.0.1:5173`.
-- **Admin de demonstração**: V2 cria a conta administrativa inicial e V8 redefine sua senha. As migrações históricas permanecem intactas. Após todas as migrações e antes de expor o ambiente, substitua `usuarios.senha_hash` dessa conta por um BCrypt de uma senha forte e exclusiva, via operação administrativa controlada. Verifique o login com a nova senha e a rejeição da antiga. Trocar `JWT_SECRET` não troca a senha.
-- **CSRF**: cookies HttpOnly/SameSite=Lax e CORS com origens exatas reduzem requisições entre sites, mas não substituem proteção CSRF completa. O contrato atual continua sem token CSRF; origens/subdomínios confiáveis precisam permanecer sob controle. Uma futura proteção com token deve implementar cliente e servidor juntos.
-- **Migração V9 existente**: `V9__quiz_result_integrity.sql` adiciona o snapshot `total_perguntas` e a restrição única por usuário/quiz. Ela **ainda não foi executada em uma instância descartável real de MySQL**. Antes de aplicá-la a uma base existente com dados, execute este preflight de duplicados:
+**Importante sobre V9 e Restrições de Quizzes:**
+A migração V9 introduz proteção de tentativa única e consistência de snapshot. Ela já foi devidamente **validada** no ambiente de release local em uma instância real de MySQL 8.
+Se você for aplicar a migração V9 a uma base *antiga já existente* (que contém dados), utilize o preflight abaixo antes de iniciar a aplicação para identificar duplicidades que travariam a migração:
 
 ```sql
 SELECT usuario_id, quiz_id, COUNT(*) AS quantidade
@@ -238,28 +200,67 @@ GROUP BY usuario_id, quiz_id
 HAVING COUNT(*) > 1;
 ```
 
-Se houver duplicados, revise os resultados antes de aplicar V9; a migração falha sem apagá-los automaticamente.
-
-Flyway está habilitado e Hibernate usa `ddl-auto=validate`, com `open-in-view=false`. O baseline automático atual é V1 para schema não vazio sem histórico: revise compatibilidade antes de apontar para uma base existente. DDL do MySQL pode deixar mudanças parciais; `flyway repair` não desfaz o schema. Cada alteração futura exige **nova migração**, com a próxima versão única livre quando criada; nunca editar migrações aplicadas.
-
-## Checklist de release
-
-- [ ] Configurar `JWT_SECRET` forte e estável.
-- [ ] Configurar CORS de produção, HTTPS e `PRODUCTION=true`.
-- [ ] Trocar a senha do administrador semeado/de demonstração após V1–V9.
-- [ ] Confirmar login com a nova senha e rejeição da antiga.
-- [ ] Revisar a decisão de publicação de termos/privacidade (F04), com documentos reais e responsáveis.
-- [ ] Testar MySQL em banco descartável/controlado: instalação V1–V9 e atualização pré-V9.
-- [ ] Executar o preflight V9 de duplicados na base existente.
-- [ ] Executar smoke test frontend/mobile: sessão, troca de conta, currículo/PDF, vagas, quiz e administração.
-- [ ] Verificar JAR, build Docker e inicialização da imagem com banco e variáveis do ambiente.
-- [ ] Revisar a limitação de CSRF antes de produção pública real.
-
-O [plano de evolução](docs/PLANO_DE_EVOLUCAO.md) preserva F01–F05, limitações adiadas e funcionalidades futuras. O TODO do Notion ainda precisa ser fornecido e cruzado com esse plano.
+**Sistema de Quizzes (Scoring):**
+- 1 acerto equivale a **100 pontos**.
+- A quantidade correta de acertos é absoluta.
+- `total_perguntas` age como um snapshot imutável de quando o quiz foi realizado.
+- O cálculo da porcentagem é feito via: `(acertos * 100.0) / total_perguntas`. Não utilize o campo `nota` (pontos) para derivar porcentagens.
 
 ---
 
-## 👨‍🎓 Autor
+## 🐳 Docker
 
-**Mazzi** — Aluno de Análise e Desenvolvimento de Sistemas  
-FATEC Tatuí — 1º Ano | TCC 2026
+Docker **não é** o fluxo principal de desenvolvimento. Ele é utilizado estritamente para empacotamento, teste de release local e execução conteinerizada.
+
+**Para empacotar:**
+```bash
+docker build -t pointmedia .
+```
+
+O container compila o frontend e o backend em um único JAR executável. Se você for rodá-lo localmente apontando para o MySQL do host, será necessário utilizar `host.docker.internal` (ou o gateway compatível), pois o `localhost` dentro do container não é a sua máquina.
+
+---
+
+## ✅ Release Validation (Validado Localmente)
+
+Já foram validados no ambiente de release local (Docker + MySQL 8 real + JAR unificado):
+
+- Migrações completas do Flyway (V1–V9).
+- Frontend consolidado servido pelo Spring Boot (Integração de roteamento).
+- Autenticação JWT.
+- Autorização baseada em papéis (CANDIDATO vs ADMIN).
+- CORS local testado.
+- Criação, leitura/edição e exportação de currículo.
+- Fluxos de gestão de vagas.
+- Geração de Candidatura (evitando duplicidades).
+- Sistema de Quiz (tentativa única e consistência de snapshot `total_perguntas`).
+- Ranking gamificado e geração de Badges / Notificações internas.
+- Fluxos principais do painel administrativo.
+- Tratamento de acessos: `401 Unauthorized` para recursos sem autenticação e `403 Forbidden` quando o usuário não possui a role necessária.
+
+---
+
+## 🚧 Produção — Requisitos Pendentes
+
+O ambiente de produção real precisa das seguintes configurações antes da exposição pública da plataforma:
+
+1. **`JWT_SECRET`:** Deve ser gerado criptograficamente e injetado via variável de ambiente estável.
+2. **CORS (`CORS_ALLOWED_ORIGINS`):** Origens reais permitidas devem ser configuradas de forma explícita.
+3. **HTTPS / `PRODUCTION=true`:** O sistema deve estar protegido por HTTPS. A variável `PRODUCTION=true` ativa o envio de cookies `Secure`.
+4. **Segurança Administrativa:** Trocar a senha do Admin semeado pela V2 e confirmar que a senha genérica não funciona mais.
+5. **Políticas Legais:** Publicar Termos de Uso e Política de Privacidade.
+6. **Limitações Conhecidas (CSRF):** O sistema utiliza cookies HttpOnly/SameSite e CORS com origens restritas. Essas medidas não substituem uma proteção CSRF dedicada. A necessidade e o desenho dessa proteção devem ser revisados antes da publicação pública.
+
+---
+
+## 📌 Comandos de Qualidade
+
+Antes de abrir Pull Requests ou avaliar sua branch, verifique seu ambiente com:
+
+- **Lint do React:** `npm run lint`
+- **Build do React:** `npm run build`
+- **Teste Limpo do Backend:** `cd backend` seguido de `mvn clean test`
+- **Build Unificado Local:** `powershell -ExecutionPolicy Bypass -File .\scripts\PointMedia-Build.ps1`
+- **Integridade do Git:** `git diff --check`
+
+Para visões estendidas do que iremos evoluir no sistema ao longo dos próximos meses, consulte [Plano de Evolução](docs/PLANO_DE_EVOLUCAO.md).
