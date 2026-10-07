@@ -8,7 +8,7 @@ try {
         throw "Frontend build failed (exit code $LASTEXITCODE)."
     }
 
-    $projectRoot = [System.IO.Path]::GetFullPath($PSScriptRoot)
+    $projectRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
     $staticPath = [System.IO.Path]::GetFullPath((Join-Path $projectRoot "backend\src\main\resources\static"))
     # Confere o caminho absoluto antes de apagar arquivos recursivamente.
     if (-not $staticPath.StartsWith($projectRoot.TrimEnd('\') + '\', [System.StringComparison]::OrdinalIgnoreCase)) {
